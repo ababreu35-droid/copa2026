@@ -199,7 +199,6 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <span class="dot on" id="live-dot"></span>
           <span class="live-label" id="live-label">Ao vivo</span>
           <button class="btn-ghost" title="Atualizar agora" onclick="manualRefresh()">↻</button>
-          <button class="btn-ghost" title="Desconectar" onclick="clearApiKey()">✕</button>
         </div>
         <div class="last-upd" id="last-upd">Dados de 19 jun · 14h30</div>
       </div>
@@ -758,7 +757,6 @@ function stopLiveMode() {
   isLive = false;
   clearInterval(pollingTimer);
   clearInterval(countdownTimer);
-  document.getElementById("live-off").style.display = "";
   document.getElementById("live-on").style.display = "none";
   currentGroups = GROUPS;
   render();
