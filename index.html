@@ -205,6 +205,56 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .ko-score .sep{color:var(--text-3);font-weight:300}
 .ko-score .t{font-size:12px;color:var(--text-3);font-weight:400}
 
+/* ─── VISUAL BRACKET ───────────────────────────────────────────── */
+.bk-toggle{display:flex;gap:6px;margin-bottom:20px}
+.bk-tbtn{background:var(--bg-card);border:1px solid var(--border);color:var(--text-2);padding:6px 18px;border-radius:var(--r-sm);font-size:13px;transition:all .15s}
+.bk-tbtn.active{background:var(--bg-hover);color:var(--text-1);border-color:var(--border-mid);font-weight:600}
+.bk-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;cursor:grab}
+.bk-root{display:inline-flex;align-items:stretch;gap:0;min-height:560px}
+.bk-half{display:flex;align-items:stretch}
+/* Column */
+.bk-col{display:flex;flex-direction:column;width:164px;flex-shrink:0}
+/* Gap between columns for connector lines */
+.bk-gap{width:20px;flex-shrink:0}
+/* Pair of 2 matches → connects to 1 match in next round */
+.bk-pair{display:flex;flex-direction:column;flex:1;position:relative}
+/* LEFT side: bracket line on RIGHT */
+.bk-pair.L{border-right:2px solid var(--border-mid);padding-right:8px}
+.bk-pair.L::after{content:'';position:absolute;right:-20px;top:calc(50% - 1px);width:20px;height:2px;background:var(--border-mid)}
+/* RIGHT side: bracket line on LEFT */
+.bk-pair.R{border-left:2px solid var(--border-mid);padding-left:8px}
+.bk-pair.R::after{content:'';position:absolute;left:-20px;top:calc(50% - 1px);width:20px;height:2px;background:var(--border-mid)}
+/* Slot (half a pair, contains one match) */
+.bk-slot{flex:1;display:flex;align-items:center;min-height:52px}
+/* SF single-match connector to Final */
+.bk-sf-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative}
+.bk-sf-wrap.L::after{content:'';position:absolute;right:-20px;top:calc(50% - 1px);width:20px;height:2px;background:var(--border-mid)}
+.bk-sf-wrap.R::after{content:'';position:absolute;left:-20px;top:calc(50% - 1px);width:20px;height:2px;background:var(--border-mid)}
+/* Match card */
+.bk-card{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex-shrink:0}
+.bk-card.bk-live{border-color:rgba(255,68,68,.45);background:rgba(255,68,68,.04)}
+.bk-card.bk-done{opacity:.88}
+.bk-card.bk-tbd{opacity:.4;border-style:dashed}
+.bk-live-bar{font-size:10px;font-weight:700;color:var(--live);padding:2px 7px;display:flex;align-items:center;gap:4px;background:rgba(255,68,68,.07)}
+.bk-trow{display:flex;align-items:center;justify-content:space-between;padding:5px 7px;min-height:27px;gap:4px;font-size:11px;color:var(--text-2)}
+.bk-trow.winner{color:var(--text-1);font-weight:700;background:rgba(34,197,94,.07)}
+.bk-trow.tbd{color:var(--text-3);font-style:italic}
+.bk-ti{display:flex;align-items:center;gap:4px;overflow:hidden;flex:1}
+.bk-tfl{font-size:13px;flex-shrink:0}
+.bk-tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-sc{font-size:13px;font-weight:700;flex-shrink:0;min-width:12px;text-align:right}
+.bk-sc.gol{color:var(--green)}
+.bk-div{height:1px;background:var(--border)}
+/* Final center column */
+.bk-final-col{display:flex;flex-direction:column;align-items:center;justify-content:center;width:196px;padding:0 10px;flex-shrink:0;gap:4px}
+.bk-final-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);text-align:center}
+.bk-final-trophy{font-size:48px;line-height:1;margin:4px 0}
+.bk-final-card{width:176px}
+.bk-final-card .bk-trow{font-size:12px;min-height:30px}
+.bk-tp-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-top:10px}
+/* Round labels above each column */
+.bk-round-wrap{display:flex;flex-direction:column}
+.bk-round-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);text-align:center;margin-bottom:8px;height:16px}
 /* RESPONSIVE */
 @media(max-width:768px){
   .group-view{grid-template-columns:1fr}
@@ -605,6 +655,99 @@ function renderLiveNow() {
   section.classList.add("visible");
 }
 
+// ─── BRACKET VIEW ────────────────────────────────────────────────────────────
+let koSubView = "lista"; // "lista" | "chaveamento"
+
+function setKoSubView(v) {
+  koSubView = v;
+  document.getElementById("bk-tbtn-lista").classList.toggle("active", v==="lista");
+  document.getElementById("bk-tbtn-chav").classList.toggle("active", v==="chaveamento");
+  document.getElementById("ko-lista").style.display = v==="lista" ? "" : "none";
+  document.getElementById("ko-bracket").style.display = v==="chaveamento" ? "" : "none";
+  if (v==="chaveamento") renderBracket();
+}
+
+function bkCard(m, wide) {
+  if (!m) return `<div class="bk-card bk-tbd${wide?" bk-final-card":""}"><div class="bk-trow tbd"><div class="bk-ti">A definir</div></div><div class="bk-div"></div><div class="bk-trow tbd"><div class="bk-ti">A definir</div></div></div>`;
+  const live = m.status==="IN_PLAY"||m.status==="PAUSED";
+  const done = m.status==="FINISHED";
+  const has  = m.hs!==null&&m.as_!==null;
+  const hw   = has&&m.hs>m.as_, aw=has&&m.as_>m.hs;
+  function tr(team, score, win) {
+    const k = team?.name;
+    return `<div class="bk-trow${win?" winner":""}${!k?" tbd":""}">
+      <div class="bk-ti">
+        ${k?`<span class="bk-tfl">${team.flag||""}</span><span class="bk-tn">${team.name}</span>`:`<span class="bk-tn">A definir</span>`}
+      </div>
+      ${has?`<span class="bk-sc${win?" gol":""}">${score}</span>`:""}
+    </div>`;
+  }
+  const cls = `bk-card${live?" bk-live":done?" bk-done":""}${wide?" bk-final-card":""}`;
+  return `<div class="${cls}">
+    ${live?`<div class="bk-live-bar"><span class="dot live-red"></span>${m.minute||"AO VIVO"}'</div>`:""}
+    ${tr(m.home,m.hs,hw)}<div class="bk-div"></div>${tr(m.away,m.as_,aw)}
+  </div>`;
+}
+
+function bkCol(matches, side, label) {
+  const pairs = [];
+  for (let i=0;i<matches.length;i+=2) pairs.push([matches[i],matches[i+1]]);
+  const pairsHtml = pairs.map(([a,b])=>`<div class="bk-pair ${side}">
+    <div class="bk-slot">${bkCard(a)}</div>
+    <div class="bk-slot">${bkCard(b||null)}</div>
+  </div>`).join("");
+  return `<div class="bk-round-wrap"><div class="bk-round-lbl">${label}</div><div class="bk-col">${pairsHtml}</div></div>`;
+}
+
+function bkSingle(m, side, label) {
+  return `<div class="bk-round-wrap"><div class="bk-round-lbl">${label}</div>
+    <div class="bk-col"><div class="bk-sf-wrap ${side}">${bkCard(m)}</div></div>
+  </div>`;
+}
+
+function renderBracket() {
+  const el = document.getElementById("ko-bracket");
+  const byStage = s => knockoutMatches.filter(m=>m.stage===s).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const r32=byStage("LAST_32"), r16=byStage("LAST_16"),
+        qf=byStage("QUARTER_FINALS"), sf=byStage("SEMI_FINALS"),
+        fin=byStage("FINAL")[0], tp=byStage("THIRD_PLACE")[0];
+
+  if (!r32.length&&!r16.length) {
+    el.innerHTML=`<p style="color:var(--text-3);padding:32px 0;text-align:center">Chaveamento disponível a partir de 28 de junho</p>`;
+    return;
+  }
+  const r32L=r32.slice(0,8),r32R=r32.slice(8);
+  const r16L=r16.slice(0,4),r16R=r16.slice(4);
+  const qfL=qf.slice(0,2),qfR=qf.slice(2);
+  const sfL=sf[0],sfR=sf[1];
+
+  const gap = `<div class="bk-gap"></div>`;
+  const left  = [bkCol(r32L,"L","Rodada 32"),gap,bkCol(r16L,"L","Oitavas"),gap,bkCol(qfL,"L","Quartas"),gap,bkSingle(sfL,"L","Semifinal")].join("")+gap;
+  const right = gap+[bkSingle(sfR,"R","Semifinal"),gap,bkCol(qfR,"R","Quartas"),gap,bkCol(r16R,"R","Oitavas"),gap,bkCol(r32R,"R","Rodada 32")].join("");
+  const center = `<div class="bk-final-col">
+    <div class="bk-final-lbl">⚽ Final</div>
+    <div class="bk-final-trophy">🏆</div>
+    ${bkCard(fin,true)}
+    ${tp?`<div class="bk-tp-lbl">3.° Lugar</div>${bkCard(tp,true)}`:""}
+  </div>`;
+
+  el.innerHTML=`<div class="bk-scroll" id="bk-scroll">
+    <div class="bk-root">
+      <div class="bk-half">${left}</div>
+      ${center}
+      <div class="bk-half">${right}</div>
+    </div>
+  </div>`;
+
+  // Drag-to-scroll
+  const s=document.getElementById("bk-scroll");
+  let down=false,sx=0,sl=0;
+  s.addEventListener("mousedown",e=>{down=true;sx=e.pageX-s.offsetLeft;sl=s.scrollLeft;s.style.cursor="grabbing"});
+  s.addEventListener("mouseleave",()=>{down=false;s.style.cursor="grab"});
+  s.addEventListener("mouseup",()=>{down=false;s.style.cursor="grab"});
+  s.addEventListener("mousemove",e=>{if(!down)return;e.preventDefault();s.scrollLeft=sl-(e.pageX-s.offsetLeft-sx)});
+}
+
 // ─── KNOCKOUT RENDER ─────────────────────────────────────────────────────────
 const KO_STAGES = [
   { key: "LAST_32",       label: "Rodada de 32" },
@@ -617,14 +760,21 @@ const KO_STAGES = [
 
 function renderKnockout() {
   const view = document.getElementById("knockout-view");
+
+  // Toggle header always present
+  const toggleHtml = `<div class="bk-toggle">
+    <button class="bk-tbtn${koSubView==="lista"?" active":""}" id="bk-tbtn-lista" onclick="setKoSubView('lista')">☰ Lista</button>
+    <button class="bk-tbtn${koSubView==="chaveamento"?" active":""}" id="bk-tbtn-chav" onclick="setKoSubView('chaveamento')">⬡ Chaveamento</button>
+  </div>`;
+
   if (!knockoutMatches.length) {
-    view.innerHTML = `<p style="color:var(--text-3);padding:32px 0;text-align:center">
+    view.innerHTML = toggleHtml + `<p style="color:var(--text-3);padding:32px 0;text-align:center">
       As partidas eliminatórias serão definidas após a fase de grupos.<br>
       <small>Começa em 28 de junho de 2026</small></p>`;
     return;
   }
 
-  const html = KO_STAGES.map(({ key, label }) => {
+  const listaHtml = KO_STAGES.map(({ key, label }) => {
     const ms = knockoutMatches.filter(m => m.stage === key);
     if (!ms.length) return "";
 
@@ -665,7 +815,11 @@ function renderKnockout() {
     </div>`;
   }).join("");
 
-  view.innerHTML = html;
+  view.innerHTML = toggleHtml
+    + `<div id="ko-lista" style="${koSubView==="lista"?"":"display:none"}">${listaHtml}</div>`
+    + `<div id="ko-bracket" style="${koSubView==="chaveamento"?"":"display:none"}"></div>`;
+
+  if (koSubView==="chaveamento") renderBracket();
 }
 
 // ─── VIEW SWITCH ─────────────────────────────────────────────────────────────
