@@ -552,25 +552,17 @@ const PROXY_LIST = [
 
 async function apiFetch(path, headers) {
   const url = API_BASE + path;
-  const isFile = location.protocol === "file:";
 
-  // Acesso via http/https — tenta direto primeiro
-  if (!isFile) {
-    const r = await fetch(url, { headers });
-    return r;
-  }
-
-  // Acesso via file:// — percorre a lista de proxies
+  // A football-data.org não envia cabeçalhos CORS para browsers,
+  // então sempre usamos proxy independente de file:// ou https://
   let lastErr = new Error("Todos os proxies CORS falharam");
   for (const mkUrl of PROXY_LIST) {
     try {
       const proxyUrl = mkUrl(url);
       const r = await fetch(proxyUrl, { headers });
-      // Aceita qualquer resposta HTTP (incluindo 4xx) para tratar o código corretamente
       return r;
     } catch (e) {
       lastErr = e;
-      // tenta o próximo proxy
     }
   }
   throw lastErr;
@@ -615,7 +607,7 @@ async function fetchLive() {
           <small style="opacity:.7">Detalhe técnico: ${netErr.message}</small>`
         );
       } else {
-        showError(`Sem conexão com a internet. Verifique e tente novamente.<br><small style="opacity:.7">${netErr.message}</small>`);
+        showError(`Falha ao buscar dados ao vivo. Verifique sua conexão e tente novamente.<br><small style="opacity:.7">${netErr.message}</small>`);
       }
       return;
     }
