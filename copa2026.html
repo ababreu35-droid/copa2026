@@ -964,12 +964,14 @@ async function fetchLive() {
 
 function mergeApiData(sData, mData) {
   // Bandeiras a partir dos dados estáticos
-  function getFlag(name) {
-    if (!name) return "";
-    const nl = name.toLowerCase();
+  function getFlag(name, tla) {
+    if (!name && !tla) return "";
+    const nl = (name || "").toLowerCase();
+    const tu = (tla || "").toUpperCase();
     for (const g of GROUPS) {
       for (const st of g.standings) {
-        if (st.team.name.toLowerCase() === nl || st.team.short.toLowerCase() === nl) return st.team.flag;
+        // TLA é idêntico nos dois lados (API envia nomes em inglês, dados estáticos em PT)
+        if (st.team.short === tu || st.team.name.toLowerCase() === nl) return st.team.flag;
       }
     }
     return "";
@@ -1011,8 +1013,8 @@ function mergeApiData(sData, mData) {
       date: m.utcDate,
       rd: m.matchday || 1,
       stage: m.stage,
-      home: { name: m.homeTeam.name || null, short: m.homeTeam.tla || "???", flag: getFlag(m.homeTeam.name) },
-      away: { name: m.awayTeam.name || null, short: m.awayTeam.tla || "???", flag: getFlag(m.awayTeam.name) },
+      home: { name: m.homeTeam.name || null, short: m.homeTeam.tla || "???", flag: getFlag(m.homeTeam.name, m.homeTeam.tla) },
+      away: { name: m.awayTeam.name || null, short: m.awayTeam.tla || "???", flag: getFlag(m.awayTeam.name, m.awayTeam.tla) },
       hs: ft.home ?? null,
       as_: ft.away ?? null,
       status: m.status,
@@ -1041,7 +1043,7 @@ function mergeApiData(sData, mData) {
 
     const standings = rows.map((row, i) => ({
       pos: i + 1,
-      team: { name: row.team.name || "?", short: row.team.tla || "???", flag: getFlag(row.team.name) },
+      team: { name: row.team.name || "?", short: row.team.tla || "???", flag: getFlag(row.team.name, row.team.tla) },
       pts: row.points, j: row.playedGames, v: row.won, e: row.draw, d: row.lost,
       gp: row.goalsFor, gc: row.goalsAgainst, sg: row.goalDifference,
     }));
