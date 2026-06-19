@@ -535,6 +535,23 @@ let countdownTimer = null;
 let countdown = 60;
 let isLive = false;
 
+// ─── LIVE STATUS HELPERS ─────────────────────────────────────────────────────
+// A API pode atrasar até ~5 min para mudar de TIMED → IN_PLAY.
+// Se o horário do jogo já passou há menos de 120 min, tratamos como "provável ao vivo".
+function isMatchLive(m) {
+  if (m.status === "IN_PLAY" || m.status === "PAUSED") return true;
+  if (m.status === "TIMED") {
+    const d = m.date || m.utcDate;
+    if (!d) return false;
+    const diff = Date.now() - new Date(d).getTime(); // ms desde início previsto
+    return diff > 0 && diff < 120 * 60 * 1000; // entre 0 e 120 min atrás
+  }
+  return false;
+}
+function isMatchConfirmedLive(m) {
+  return m.status === "IN_PLAY" || m.status === "PAUSED";
+}
+
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 function fmtDate(iso) {
   return new Date(iso).toLocaleDateString("pt-BR",{day:"2-digit",month:"short",timeZone:"America/Sao_Paulo"});
@@ -582,14 +599,17 @@ function renderToday() {
   }
 
   const cards = todayMatches.map(match => {
-    const live = match.status === "IN_PLAY" || match.status === "PAUSED";
+    const live = isMatchLive(match);
+    const confirmed = isMatchConfirmedLive(match);
     const finished = match.status === "FINISHED";
     const hasScore = match.hs !== null && match.as_ !== null;
     const hw = hasScore && match.hs > match.as_;
     const aw = hasScore && match.as_ > match.hs;
 
     const statusHtml = live
-      ? `<span class="today-status live"><span class="dot live-red"></span>AO VIVO${match.minute ? ` · ${match.minute}'` : ""}</span>`
+      ? confirmed
+        ? `<span class="today-status live"><span class="dot live-red"></span>AO VIVO${match.minute ? ` · ${match.minute}'` : ""}</span>`
+        : `<span class="today-status live"><span class="dot live-red"></span>EM ANDAMENTO</span>`
       : finished
         ? `<span class="today-status finished">Encerrado</span>`
         : `<span class="today-status scheduled">${fmtTime(match.date)}</span>`;
@@ -631,7 +651,7 @@ function renderToday() {
 function renderTabs() {
   const tabs = document.getElementById("group-tabs");
   tabs.innerHTML = currentGroups.map(g => {
-    const hasLive = g.matches.some(m => m.status === "IN_PLAY" || m.status === "PAUSED");
+    const hasLive = g.matches.some(m => isMatchLive(m));
     return `<button class="tab${g.id===selectedId?" active":""}" onclick="selectGroup('${g.id}')">
       ${g.id}${hasLive?`<span class="dot live-red"></span>`:""}
     </button>`;
@@ -692,12 +712,15 @@ function renderMatches(group) {
     const ms = group.matches.filter(m => m.rd === rd);
     const cards = ms.map(match => {
       const finished = match.status === "FINISHED";
-      const live = match.status === "IN_PLAY" || match.status === "PAUSED";
+      const live = isMatchLive(match);
+      const confirmed = isMatchConfirmedLive(match);
       const hasScore = match.hs !== null && match.as_ !== null;
       const hw = hasScore && match.hs > match.as_;
       const aw = hasScore && match.as_ > match.hs;
       const infoHtml = live
-        ? `<div class="live-badge"><span class="dot live-red"></span>AO VIVO${match.minute?` · ${match.minute}'`:""}</div>`
+        ? confirmed
+          ? `<div class="live-badge"><span class="dot live-red"></span>AO VIVO${match.minute?` · ${match.minute}'`:""}</div>`
+          : `<div class="live-badge"><span class="dot live-red"></span>EM ANDAMENTO</div>`
         : `<div class="match-info">${finished?fmtDate(match.date):`${fmtDate(match.date)} · ${fmtTime(match.date)}`}</div>`;
       const scoreHtml = hasScore
         ? `<span${hw?" class='score-w'":""}>${match.hs}</span><span class="score-sep">–</span><span${aw?" class='score-w'":""}>${match.as_}</span>`
@@ -737,13 +760,15 @@ function renderLiveNow() {
   const section = document.getElementById("live-now-section");
   const allMatches = [...currentGroups.flatMap(g => g.matches.map(m => ({...m, groupId: g.id}))),
                       ...knockoutMatches];
-  const live = allMatches.filter(m => m.status === "IN_PLAY" || m.status === "PAUSED");
+  const live = allMatches.filter(m => isMatchLive(m));
   if (!live.length) { section.classList.remove("visible"); return; }
 
   const cards = live.map(m => {
+    const confirmed = isMatchConfirmedLive(m);
+    const minuteLabel = confirmed ? (m.minute ? `${m.minute}'` : "AO VIVO") : "EM ANDAMENTO";
     const label = m.groupId ? `GRUPO ${m.groupId}` : (m.stageName || "");
     return `<div class="live-now-card" onclick="${m.groupId ? `selectGroup('${m.groupId}')` : `setView('eliminatorias')`}">
-      <div class="live-now-minute"><span class="dot live-red"></span>${m.minute ? `${m.minute}'` : "AO VIVO"} &nbsp;<span style="opacity:.5;font-weight:400">${label}</span></div>
+      <div class="live-now-minute"><span class="dot live-red"></span>${minuteLabel} &nbsp;<span style="opacity:.5;font-weight:400">${label}</span></div>
       <div class="live-now-row">
         <div class="live-now-team"><span>${m.home?.flag||""}</span>${m.home?.name||"?"}</div>
         <div class="live-now-score">${m.hs??"-"} – ${m.as_??"-"}</div>
@@ -771,7 +796,8 @@ function setKoSubView(v) {
 
 function bkCard(m, wide) {
   if (!m) return `<div class="bk-card bk-tbd${wide?" bk-final-card":""}"><div class="bk-trow tbd"><div class="bk-ti">A definir</div></div><div class="bk-div"></div><div class="bk-trow tbd"><div class="bk-ti">A definir</div></div></div>`;
-  const live = m.status==="IN_PLAY"||m.status==="PAUSED";
+  const live = isMatchLive(m);
+  const confirmed = isMatchConfirmedLive(m);
   const done = m.status==="FINISHED";
   const has  = m.hs!==null&&m.as_!==null;
   const hw   = has&&m.hs>m.as_, aw=has&&m.as_>m.hs;
@@ -785,8 +811,9 @@ function bkCard(m, wide) {
     </div>`;
   }
   const cls = `bk-card${live?" bk-live":done?" bk-done":""}${wide?" bk-final-card":""}`;
+  const liveLabel = confirmed ? (m.minute ? `${m.minute}'` : "AO VIVO") : "EM ANDAMENTO";
   return `<div class="${cls}">
-    ${live?`<div class="bk-live-bar"><span class="dot live-red"></span>${m.minute||"AO VIVO"}'</div>`:""}
+    ${live?`<div class="bk-live-bar"><span class="dot live-red"></span>${liveLabel}</div>`:""}
     ${tr(m.home,m.hs,hw)}<div class="bk-div"></div>${tr(m.away,m.as_,aw)}
   </div>`;
 }
@@ -1205,8 +1232,17 @@ async function fetchLive() {
     hideError();
     updateLastUpdated(new Date(), true);
 
-    // Polling mais rápido (30s) quando há jogo ao vivo
-    const hasLive = (mData.matches||[]).some(m => m.status === "IN_PLAY" || m.status === "PAUSED");
+    // Polling mais rápido (30s) quando há jogo ao vivo ou prestes a começar/em andamento
+    const rawMatches = mData.matches || [];
+    const hasLive = rawMatches.some(m => {
+      if (m.status === "IN_PLAY" || m.status === "PAUSED") return true;
+      // Se ainda está TIMED mas horário já passou (API com delay) → pollar mais rápido
+      if (m.status === "TIMED") {
+        const diff = Date.now() - new Date(m.utcDate).getTime();
+        return diff > 0 && diff < 120 * 60 * 1000;
+      }
+      return false;
+    });
     const interval = hasLive ? 30000 : 60000;
     countdown = hasLive ? 30 : 60;
     clearInterval(pollingTimer);
