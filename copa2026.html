@@ -1029,9 +1029,13 @@ function selectGroup(id) {
   selectedId = id;
   setView("grupos");
   render();
-  // Rola para mostrar o conteúdo do grupo abaixo das tabs
+  // Scroll manual: desconta header fixo + view-nav + tabs para não cortar o conteúdo
   setTimeout(() => {
-    document.getElementById("standings-col")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = document.getElementById("standings-col");
+    if (!el) return;
+    const stickyOffset = 165; // header (~61) + view-nav (~44) + tabs (~60)
+    const top = el.getBoundingClientRect().top + window.scrollY - stickyOffset;
+    window.scrollTo({ top, behavior: "smooth" });
   }, 60);
 }
 
