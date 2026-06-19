@@ -212,6 +212,53 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .ko-score{font-size:19px;font-weight:800;color:var(--text-1);min-width:62px;text-align:center;flex-shrink:0}
 .ko-score .sep{color:var(--text-3);font-weight:300}.ko-score .t{font-size:12px;color:var(--text-2);font-weight:600;background:var(--bg-hover);padding:3px 8px;border-radius:999px}
 
+/* ─── ARTILHEIROS ──────────────────────────────────────────────── */
+.scorers-view{display:none;flex-direction:column;gap:28px;padding-top:12px}
+.scorers-view.active{display:flex}
+/* Pódio top 3 */
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;margin-bottom:4px}
+.podium-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 12px 16px;text-align:center;position:relative;transition:all .2s;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.podium-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.podium-card.p1{border-color:rgba(240,165,0,.35);background:linear-gradient(180deg,rgba(240,165,0,.08) 0%,var(--bg-card) 60%);order:2}
+.podium-card.p2{border-color:rgba(192,192,192,.25);background:linear-gradient(180deg,rgba(192,192,192,.05) 0%,var(--bg-card) 60%)}
+.podium-card.p3{border-color:rgba(180,120,60,.25);background:linear-gradient(180deg,rgba(180,120,60,.05) 0%,var(--bg-card) 60%)}
+.podium-medal{font-size:28px;line-height:1;margin-bottom:8px}
+.podium-flag{font-size:36px;line-height:1;margin-bottom:6px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.podium-name{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:3px;line-height:1.3}
+.podium-team{font-size:11px;color:var(--text-3);margin-bottom:12px}
+.podium-goals{font-size:32px;font-weight:900;color:var(--text-1);line-height:1;letter-spacing:-1px}
+.podium-goals-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.podium-goals span.g1{color:var(--gold)}
+.podium-goals span.g2{color:#b0b8c0}
+.podium-goals span.g3{color:#b47040}
+.podium-assists{font-size:11px;color:var(--text-3);margin-top:8px}
+.podium-assists strong{color:var(--blue)}
+/* Tabela artilheiros */
+.scorers-table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.scorers-table{width:100%;border-collapse:collapse}
+.scorers-table th{background:var(--bg-surface);color:var(--text-3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.scorers-table th.c-player{text-align:left}
+.scorers-table td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text-2);text-align:center;font-size:13px;transition:background .15s}
+.scorers-table tr:last-child td{border-bottom:none}
+.scorers-table tr:hover td{background:var(--bg-hover)}
+.sc-rank{font-size:13px;font-weight:700;color:var(--text-3);min-width:28px}
+.sc-rank.top{color:var(--gold);font-size:16px}
+.sc-player-cell{text-align:left!important;min-width:160px}
+.sc-player-name{font-weight:600;color:var(--text-1);font-size:13px}
+.sc-team{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;margin-top:2px}
+.sc-goals{font-size:16px;font-weight:800;color:var(--text-1)}
+.sc-goals.leader{color:var(--gold)}
+.sc-assists{font-size:13px;color:var(--blue);font-weight:600}
+.sc-matches{font-size:12px;color:var(--text-3)}
+.sc-bar{height:3px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden}
+.sc-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:2px;transition:width .6s ease}
+/* RESPONSIVE */
+@media(max-width:600px){
+  .podium{grid-template-columns:1fr 1fr 1fr}
+  .podium-flag{font-size:28px}
+  .podium-goals{font-size:26px}
+}
+
 /* ─── VISUAL BRACKET ───────────────────────────────────────────── */
 .bk-toggle{display:flex;gap:6px;margin-bottom:22px}
 .bk-tbtn{background:var(--bg-card);border:1px solid var(--border);color:var(--text-3);padding:7px 20px;border-radius:999px;font-size:13px;font-weight:600;transition:all .2s}
@@ -322,6 +369,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <div class="view-nav-inner">
       <button class="view-btn active" id="vbtn-grupos" onclick="setView('grupos')">⚽ Fase de Grupos</button>
       <button class="view-btn" id="vbtn-eliminatorias" onclick="setView('eliminatorias')">🏆 Eliminatórias</button>
+      <button class="view-btn" id="vbtn-artilheiros" onclick="setView('artilheiros')">🥅 Artilheiros</button>
     </div>
   </div>
 
@@ -344,6 +392,9 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
     <!-- ELIMINATÓRIAS -->
     <div class="knockout-view" id="knockout-view"></div>
+
+    <!-- ARTILHEIROS -->
+    <div class="scorers-view" id="scorers-view"></div>
   </main>
 </div>
 
@@ -465,6 +516,7 @@ const GROUPS = [
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let currentGroups = GROUPS;
 let knockoutMatches = [];
+let scorersData = [];
 let selectedId = "A";
 let currentView = "grupos";
 const HARDCODED_KEY = "12bea6119d864fa2a562131cef67af85";
@@ -854,14 +906,93 @@ function renderKnockout() {
   if (koSubView==="chaveamento") renderBracket();
 }
 
+// ─── ARTILHEIROS ─────────────────────────────────────────────────────────────
+function renderScorers() {
+  const el = document.getElementById("scorers-view");
+  if (!scorersData.length) {
+    el.innerHTML = `<p style="color:var(--text-3);padding:40px 0;text-align:center;font-size:14px">
+      Carregando artilheiros… <span style="opacity:.5;font-size:12px">(requer modo ao vivo)</span></p>`;
+    return;
+  }
+
+  const top = scorersData.slice(0, 3);
+  const rest = scorersData.slice(3);
+  const maxGoals = scorersData[0]?.goals || 1;
+
+  const medals = ["🥇","🥈","🥉"];
+  const goalColors = ["g1","g2","g3"];
+  const posClass = ["p1","p2","p3"];
+
+  function teamFlag(tla) { return getFlag("", tla); }
+
+  // Pódio top 3
+  const podiumCards = top.map((s, i) => {
+    const flag = teamFlag(s.team.tla);
+    const ast = s.assists ? `<div class="podium-assists">🎯 <strong>${s.assists}</strong> assist.</div>` : "";
+    return `<div class="podium-card ${posClass[i]}">
+      <div class="podium-medal">${medals[i]}</div>
+      <div class="podium-flag">${flag}</div>
+      <div class="podium-name">${s.player.name}</div>
+      <div class="podium-team">${s.team.shortName||s.team.name}</div>
+      <div class="podium-goals"><span class="${goalColors[i]}">${s.goals}</span></div>
+      <div class="podium-goals-lbl">${s.goals===1?"gol":"gols"}</div>
+      ${ast}
+    </div>`;
+  }).join("");
+
+  // Tabela do resto
+  const tableRows = scorersData.map((s, i) => {
+    const flag = teamFlag(s.team.tla);
+    const barW = Math.round((s.goals / maxGoals) * 100);
+    const isLeader = s.goals === maxGoals;
+    const ast = s.assists != null ? `<td class="sc-assists">🎯 ${s.assists}</td>` : `<td class="sc-matches" style="color:var(--text-3)">—</td>`;
+    const rankHtml = i < 3 ? `<td class="sc-rank top">${medals[i]}</td>` : `<td class="sc-rank">${i+1}</td>`;
+    return `<tr>
+      ${rankHtml}
+      <td class="sc-player-cell">
+        <div class="sc-player-name">${s.player.name}</div>
+        <div class="sc-team">${flag} ${s.team.shortName||s.team.name}</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:${barW}%"></div></div>
+      </td>
+      <td><span class="sc-goals${isLeader?" leader":""}">${s.goals}</span></td>
+      ${ast}
+      <td class="sc-matches">${s.playedMatches}j</td>
+    </tr>`;
+  }).join("");
+
+  const total = scorersData.reduce((sum, s) => sum + s.goals, 0);
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3)">🥅 Artilheiros — Copa 2026</div>
+      <div style="font-size:12px;color:var(--text-3)">${total} gols em ${scorersData.length} jogadores</div>
+    </div>
+    <div class="podium">${podiumCards}</div>
+    <div class="scorers-table-wrap">
+      <table class="scorers-table">
+        <thead><tr>
+          <th>#</th>
+          <th class="c-player">Jogador</th>
+          <th title="Gols">⚽</th>
+          <th title="Assistências">🎯</th>
+          <th title="Jogos">J</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+}
+
 // ─── VIEW SWITCH ─────────────────────────────────────────────────────────────
 function setView(v) {
   currentView = v;
-  document.getElementById("groups-view").style.display   = v === "grupos" ? "" : "none";
+  document.getElementById("groups-view").style.display = v === "grupos" ? "" : "none";
   document.getElementById("knockout-view").classList.toggle("active", v === "eliminatorias");
-  document.getElementById("vbtn-grupos").classList.toggle("active", v === "grupos");
-  document.getElementById("vbtn-eliminatorias").classList.toggle("active", v === "eliminatorias");
+  document.getElementById("scorers-view").classList.toggle("active", v === "artilheiros");
+  ["grupos","eliminatorias","artilheiros"].forEach(id =>
+    document.getElementById(`vbtn-${id}`).classList.toggle("active", v === id)
+  );
   if (v === "eliminatorias") renderKnockout();
+  if (v === "artilheiros") renderScorers();
 }
 
 function render() {
@@ -930,11 +1061,12 @@ async function fetchLive() {
   setLoading(true);
   const headers = { "X-Auth-Token": apiKey };
   try {
-    let sr, mr;
+    let sr, mr, scr;
     try {
-      [sr, mr] = await Promise.all([
+      [sr, mr, scr] = await Promise.all([
         apiFetch("/competitions/WC/standings?season=2026", headers),
-        apiFetch("/competitions/WC/matches?season=2026", headers),  // todas as fases
+        apiFetch("/competitions/WC/matches?season=2026", headers),
+        apiFetch("/competitions/WC/scorers?season=2026&limit=30", headers),
       ]);
     } catch (netErr) {
       // Falha de rede / todos proxies falharam
@@ -976,8 +1108,10 @@ async function fetchLive() {
       return;
     }
 
-    const [sData, mData] = await Promise.all([sr.json(), mr.json()]);
+    const [sData, mData, scData] = await Promise.all([sr.json(), mr.json(), scr.json()]);
+    scorersData = (scData.scorers || []).sort((a, b) => b.goals - a.goals);
     mergeApiData(sData, mData);
+    if (currentView === "artilheiros") renderScorers();
     hideError();
     updateLastUpdated(new Date(), true);
 
@@ -994,21 +1128,20 @@ async function fetchLive() {
   }
 }
 
-function mergeApiData(sData, mData) {
-  // Bandeiras a partir dos dados estáticos
-  function getFlag(name, tla) {
-    if (!name && !tla) return "";
-    const nl = (name || "").toLowerCase();
-    const tu = (tla || "").toUpperCase();
-    for (const g of GROUPS) {
-      for (const st of g.standings) {
-        // TLA é idêntico nos dois lados (API envia nomes em inglês, dados estáticos em PT)
-        if (st.team.short === tu || st.team.name.toLowerCase() === nl) return st.team.flag;
-      }
+// Função global de bandeiras — TLA tem prioridade sobre nome (API usa inglês, dados em PT)
+function getFlag(name, tla) {
+  if (!name && !tla) return "";
+  const nl = (name || "").toLowerCase();
+  const tu = (tla || "").toUpperCase();
+  for (const g of GROUPS) {
+    for (const st of g.standings) {
+      if (st.team.short === tu || st.team.name.toLowerCase() === nl) return st.team.flag;
     }
-    return "";
   }
+  return "";
+}
 
+function mergeApiData(sData, mData) {
   // 1. Mapear teamId → grupo via partidas (únicas que têm "GROUP_A" etc.)
   const teamGroup = {};
   for (const m of (mData.matches || [])) {
