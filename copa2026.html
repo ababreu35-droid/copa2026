@@ -185,17 +185,43 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .today-score .time{font-size:14px;font-weight:700;color:var(--text-2);background:var(--bg-hover);padding:4px 10px;border-radius:999px;font-size:13px}
 
 /* LIVE NOW BANNER */
-.live-now-section{background:linear-gradient(135deg,rgba(255,58,58,.1),rgba(255,58,58,.05));border:1px solid rgba(255,58,58,.25);border-radius:var(--r-md);margin:24px 0 0;padding:16px 18px;display:none;box-shadow:0 0 30px rgba(255,58,58,.1)}
+.live-now-section{margin:24px 0 0;display:none}
 .live-now-section.visible{display:block}
-.live-now-title{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--live);display:flex;align-items:center;gap:7px;margin-bottom:14px}
-.live-now-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.live-now-card{background:var(--bg-card);border:1px solid rgba(255,58,58,.3);border-radius:var(--r-md);padding:13px 15px;cursor:pointer;transition:all .2s}
-.live-now-card:hover{border-color:rgba(255,58,58,.6);transform:translateY(-1px)}
-.live-now-minute{font-size:12px;font-weight:800;color:var(--live);display:flex;align-items:center;gap:5px;margin-bottom:9px}
-.live-now-row{display:flex;align-items:center;gap:8px}
-.live-now-team{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.live-now-team.right{flex-direction:row-reverse;text-align:right}
-.live-now-score{font-size:24px;font-weight:900;color:var(--text-1);min-width:68px;text-align:center;letter-spacing:-1px}
+.live-now-title{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--live);display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.live-now-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+/* rich live card */
+.live-now-card{background:linear-gradient(160deg,#1a0f0f,#1c1018);border:1px solid rgba(255,58,58,.45);border-radius:var(--r-md);overflow:hidden;cursor:pointer;transition:all .25s;box-shadow:0 4px 24px rgba(255,58,58,.12)}
+.live-now-card:hover{border-color:rgba(255,58,58,.75);transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,58,58,.22)}
+.ln-header{background:rgba(255,58,58,.18);padding:8px 14px;display:flex;align-items:center;justify-content:space-between}
+.ln-live-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--live)}
+.ln-period{font-size:11px;font-weight:700;color:var(--text-2);background:rgba(255,255,255,.07);padding:3px 9px;border-radius:999px;letter-spacing:.04em}
+.ln-elapsed{font-size:22px;font-weight:900;color:var(--live);letter-spacing:-1px;line-height:1}
+.ln-elapsed small{font-size:13px;font-weight:700;color:var(--text-2);margin-left:2px}
+/* score area */
+.ln-score-area{padding:18px 16px 14px;display:flex;align-items:center;gap:10px}
+.ln-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.ln-team-crest{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.ln-team-flag{font-size:32px;line-height:1}
+.ln-team-name{font-size:12px;font-weight:700;color:var(--text-1);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}
+.ln-team-short{font-size:16px;font-weight:900;letter-spacing:.05em;color:var(--text-1)}
+.ln-score-center{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px}
+.ln-score-main{font-size:48px;font-weight:900;letter-spacing:-3px;color:#fff;line-height:1;display:flex;align-items:center;gap:4px}
+.ln-score-sep{font-size:32px;font-weight:300;color:rgba(255,255,255,.35);margin:0 2px}
+.ln-score-ht{font-size:11px;color:var(--text-3);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:999px;white-space:nowrap}
+/* meta row */
+.ln-meta{padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ln-meta-chip{font-size:11px;color:var(--text-3);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:3px 9px;border-radius:999px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+/* mini group table */
+.ln-table-wrap{padding:0 14px 14px}
+.ln-table-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.ln-table{width:100%;border-collapse:collapse;font-size:12px}
+.ln-table td{padding:4px 5px;color:var(--text-2)}
+.ln-table tr.ln-playing td{color:var(--text-1);font-weight:700}
+.ln-table tr.ln-playing td:first-child{color:var(--live)}
+.ln-table td:first-child{width:18px;text-align:center;font-size:11px;color:var(--text-3)}
+.ln-table td:nth-child(2){display:flex;align-items:center;gap:5px}
+.ln-table td:last-child,.ln-table td:nth-child(3){text-align:center;font-weight:700;color:var(--text-1)}
+.ln-table tr:not(:last-child) td{border-bottom:1px solid rgba(255,255,255,.05)}
 
 /* KNOCKOUT */
 .knockout-view{display:none;flex-direction:column;gap:28px;padding-top:12px}
@@ -756,6 +782,15 @@ function renderMatches(group) {
 }
 
 // ─── LIVE NOW BANNER ─────────────────────────────────────────────────────────
+function calcPeriod(dateStr, status) {
+  const elapsed = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  if (status === "PAUSED") return { label: "INTERVALO", elapsed: 45 };
+  if (elapsed <= 0)  return { label: "INÍCIO", elapsed: 0 };
+  if (elapsed <= 45) return { label: "1° TEMPO", elapsed };
+  if (elapsed <= 105) return { label: "2° TEMPO", elapsed: Math.min(elapsed - 45, 90) };
+  return { label: "2° TEMPO", elapsed: 90 };
+}
+
 function renderLiveNow() {
   const section = document.getElementById("live-now-section");
   const allMatches = [...currentGroups.flatMap(g => g.matches.map(m => ({...m, groupId: g.id}))),
@@ -765,15 +800,90 @@ function renderLiveNow() {
 
   const cards = live.map(m => {
     const confirmed = isMatchConfirmedLive(m);
-    const minuteLabel = confirmed ? (m.minute ? `${m.minute}'` : "AO VIVO") : "EM ANDAMENTO";
-    const label = m.groupId ? `GRUPO ${m.groupId}` : (m.stageName || "");
-    return `<div class="live-now-card" onclick="${m.groupId ? `selectGroup('${m.groupId}')` : `setView('eliminatorias')`}">
-      <div class="live-now-minute"><span class="dot live-red"></span>${minuteLabel} &nbsp;<span style="opacity:.5;font-weight:400">${label}</span></div>
-      <div class="live-now-row">
-        <div class="live-now-team"><span>${m.home?.flag||""}</span>${m.home?.name||"?"}</div>
-        <div class="live-now-score">${m.hs??"-"} – ${m.as_??"-"}</div>
-        <div class="live-now-team right">${m.away?.name||"?"}<span>${m.away?.flag||""}</span></div>
+    const onclick = m.groupId ? `selectGroup('${m.groupId}')` : `setView('eliminatorias')`;
+    const label = m.groupId ? `GRUPO ${m.groupId}` : (m.stageName || "MATA-MATA");
+
+    // Period / elapsed time
+    const { label: periodLabel, elapsed } = calcPeriod(m.date, m.status);
+    const elapsedHtml = (confirmed && m.status !== "PAUSED")
+      ? `<span class="ln-elapsed">${elapsed}<small>'</small></span>`
+      : `<span class="ln-elapsed" style="font-size:14px">${periodLabel}</span>`;
+    const periodPill = `<span class="ln-period">${periodLabel}</span>`;
+
+    // Team logos
+    function teamImg(t) {
+      return t.crest
+        ? `<img src="${t.crest}" class="ln-team-crest" onerror="this.outerHTML='<span class=ln-team-flag>${t.flag}</span>'">`
+        : `<span class="ln-team-flag">${t.flag}</span>`;
+    }
+
+    // HT score sub-label
+    const htHtml = (m.ht_home !== null && m.ht_away !== null)
+      ? `<span class="ln-score-ht">1° T: ${m.ht_home}–${m.ht_away}</span>`
+      : "";
+
+    // Meta chips: round, referee
+    const rdLabel = m.rd ? `Rodada ${m.rd}` : (m.stageName || "");
+    const chips = [
+      rdLabel ? `<span class="ln-meta-chip">📋 ${rdLabel}</span>` : "",
+      m.referee ? `<span class="ln-meta-chip">🟡 ${m.referee}</span>` : "",
+    ].filter(Boolean).join("");
+
+    // Mini group standings table
+    let standingsHtml = "";
+    if (m.groupId) {
+      const grp = currentGroups.find(g => g.id === m.groupId);
+      if (grp && grp.standings.length) {
+        const rows = grp.standings.map(s => {
+          const isPlaying = s.team.short === m.home.short || s.team.short === m.away.short;
+          const adv = s.pos <= 2 ? `style="border-left:2px solid var(--accent)"` : "";
+          const crestImg = s.team.crest
+            ? `<img src="${s.team.crest}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='${s.team.flag}'">`
+            : s.team.flag;
+          return `<tr class="${isPlaying?"ln-playing":""}">
+            <td ${adv}>${s.pos}</td>
+            <td>${crestImg} ${s.team.short}</td>
+            <td>${s.pts}</td>
+            <td style="color:var(--text-3);font-size:11px">${s.j}j ${s.sg>0?"+":""}${s.sg}</td>
+          </tr>`;
+        }).join("");
+        standingsHtml = `<div class="ln-table-wrap">
+          <div class="ln-table-title">Classificação Grupo ${m.groupId}</div>
+          <table class="ln-table"><tbody>${rows}</tbody></table>
+        </div>`;
+      }
+    }
+
+    return `<div class="live-now-card" onclick="${onclick}">
+      <div class="ln-header">
+        <div class="ln-live-pill"><span class="dot live-red"></span>${label}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${elapsedHtml}
+          ${periodPill}
+        </div>
       </div>
+      <div class="ln-score-area">
+        <div class="ln-team">
+          ${teamImg(m.home)}
+          <div class="ln-team-short">${m.home.short}</div>
+          <div class="ln-team-name">${m.home.name}</div>
+        </div>
+        <div class="ln-score-center">
+          <div class="ln-score-main">
+            <span>${m.hs ?? "-"}</span>
+            <span class="ln-score-sep">–</span>
+            <span>${m.as_ ?? "-"}</span>
+          </div>
+          ${htHtml}
+        </div>
+        <div class="ln-team">
+          ${teamImg(m.away)}
+          <div class="ln-team-short">${m.away.short}</div>
+          <div class="ln-team-name">${m.away.name}</div>
+        </div>
+      </div>
+      ${chips ? `<div class="ln-meta">${chips}</div>` : ""}
+      ${standingsHtml}
     </div>`;
   }).join("");
 
@@ -1308,8 +1418,11 @@ function mergeApiData(sData, mData) {
       away: { name: m.awayTeam.name||null, short: m.awayTeam.tla||"???", flag: getFlag(m.awayTeam.name,m.awayTeam.tla), crest: m.awayTeam.crest||"" },
       hs: ft.home ?? null,
       as_: ft.away ?? null,
+      ht_home: m.score?.halfTime?.home ?? null,
+      ht_away: m.score?.halfTime?.away ?? null,
       status: m.status,
       minute: m.minute ?? null,
+      referee: m.referees?.[0]?.name ?? null,
     };
 
     if (m.stage === "GROUP_STAGE") {
