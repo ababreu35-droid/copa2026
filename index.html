@@ -139,6 +139,11 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .score-sep{color:var(--text-3);font-weight:300;font-size:16px}
 .score-w{color:var(--green)}
 .score-time{font-size:13px;color:var(--text-2);font-weight:600;background:var(--bg-hover);padding:3px 8px;border-radius:999px}
+.match-goals{margin-top:7px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--text-2);padding-top:6px;border-top:1px solid var(--border)}
+.mg{display:flex;align-items:center;gap:3px}
+.mg-home{color:var(--text-1)}
+.mg-away{color:var(--text-2)}
+.match-venue{margin-top:5px;font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px}
 
 /* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;backdrop-filter:blur(6px);display:none}
@@ -179,6 +184,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .today-team.right{flex-direction:row-reverse;text-align:right}
 .today-team.winner{color:var(--text-1);font-weight:700}
 .today-team-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.today-venue{margin-top:8px;font-size:10px;color:var(--text-3)}
 .today-score{display:flex;align-items:center;justify-content:center;gap:4px;font-size:22px;font-weight:800;color:var(--text-1);min-width:68px}
 .today-score .sep{color:var(--text-3);font-weight:300;font-size:18px}
 .today-score .sw{color:var(--green)}
@@ -442,129 +448,44 @@ button:disabled{opacity:.4;cursor:not-allowed}
   </main>
 </div>
 
-<!-- MODAL -->
-<div class="overlay" id="modal" onclick="closeModalOnOverlay(event)">
-  <div class="modal">
-    <div class="modal-head">
-      <h2>Ativar atualizações ao vivo</h2>
-      <button class="btn-ghost" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <p>Conecte uma chave gratuita da <a href="https://www.football-data.org/client/register" target="_blank">football-data.org</a> para receber placares em tempo real.</p>
-      <ol class="steps">
-        <li>Acesse <a href="https://www.football-data.org/client/register" target="_blank">football-data.org/client/register</a></li>
-        <li>Crie uma conta gratuita (menos de 1 minuto)</li>
-        <li>Copie a chave de API do seu painel</li>
-        <li>Cole abaixo e clique em <strong>Salvar e ativar</strong></li>
-      </ol>
-      <form class="modal-form" onsubmit="saveApiKey(event)">
-        <label for="api-key-input">Chave de API</label>
-        <input id="api-key-input" type="text" placeholder="ex: a1b2c3d4e5f6…" autocomplete="off"/>
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" onclick="closeModal()">Cancelar</button>
-          <button type="submit" class="btn-primary" id="save-btn" disabled>Salvar e ativar</button>
-        </div>
-      </form>
-      <p class="modal-note">A chave fica salva no navegador. O app atualiza a cada 60 segundos automaticamente.</p>
-    </div>
-  </div>
-</div>
+<!-- MODAL removido — ESPN não requer chave de API -->
 
 <script>
-// ─── DADOS ESTÁTICOS ────────────────────────────────────────────────────────
-function t(name, short, flag) { return { name, short, flag } }
+// ─── DADOS ESTÁTICOS — apenas bandeiras (ESPN não fornece emojis) ────────────
+const FLAG_MAP = {
+  MEX:"🇲🇽",KOR:"🇰🇷",CZE:"🇨🇿",RSA:"🇿🇦",
+  CAN:"🇨🇦",SUI:"🇨🇭",BIH:"🇧🇦",QAT:"🇶🇦",
+  BRA:"🇧🇷",MAR:"🇲🇦",SCO:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",HAI:"🇭🇹",
+  USA:"🇺🇸",AUS:"🇦🇺",PAR:"🇵🇾",TUR:"🇹🇷",
+  GER:"🇩🇪",CIV:"🇨🇮",ECU:"🇪🇨",CUW:"🇨🇼",
+  NED:"🇳🇱",SWE:"🇸🇪",JPN:"🇯🇵",TUN:"🇹🇳",
+  BEL:"🇧🇪",EGY:"🇪🇬",IRN:"🇮🇷",NZL:"🇳🇿",
+  ESP:"🇪🇸",CPV:"🇨🇻",KSA:"🇸🇦",URU:"🇺🇾",
+  FRA:"🇫🇷",SEN:"🇸🇳",IRQ:"🇮🇶",NOR:"🇳🇴",
+  ARG:"🇦🇷",ALG:"🇩🇿",AUT:"🇦🇹",JOR:"🇯🇴",
+  POR:"🇵🇹",COD:"🇨🇩",UZB:"🇺🇿",COL:"🇨🇴",
+  ENG:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",CRO:"🇭🇷",GHA:"🇬🇭",PAN:"🇵🇦",
+};
 
-const MEX=t("México","MEX","🇲🇽"),KOR=t("Coreia do Sul","KOR","🇰🇷"),CZE=t("Tchéquia","CZE","🇨🇿"),RSA=t("África do Sul","RSA","🇿🇦");
-const CAN=t("Canadá","CAN","🇨🇦"),SUI=t("Suíça","SUI","🇨🇭"),BIH=t("Bósnia","BIH","🇧🇦"),QAT=t("Catar","QAT","🇶🇦");
-const BRA=t("Brasil","BRA","🇧🇷"),MAR=t("Marrocos","MAR","🇲🇦"),SCO=t("Escócia","SCO","🏴󠁧󠁢󠁳󠁣󠁴󠁿"),HAI=t("Haiti","HAI","🇭🇹");
-const USA=t("Estados Unidos","USA","🇺🇸"),AUS=t("Austrália","AUS","🇦🇺"),PAR=t("Paraguai","PAR","🇵🇾"),TUR=t("Turquia","TUR","🇹🇷");
-const GER=t("Alemanha","GER","🇩🇪"),CIV=t("C. do Marfim","CIV","🇨🇮"),ECU=t("Equador","ECU","🇪🇨"),CUW=t("Curaçao","CUW","🇨🇼");
-const NED=t("Países Baixos","NED","🇳🇱"),SWE=t("Suécia","SWE","🇸🇪"),JPN=t("Japão","JPN","🇯🇵"),TUN=t("Tunísia","TUN","🇹🇳");
-const BEL=t("Bélgica","BEL","🇧🇪"),EGY=t("Egito","EGY","🇪🇬"),IRN=t("Irã","IRN","🇮🇷"),NZL=t("Nova Zelândia","NZL","🇳🇿");
-const ESP=t("Espanha","ESP","🇪🇸"),CPV=t("Cabo Verde","CPV","🇨🇻"),KSA=t("Arábia Saudita","KSA","🇸🇦"),URU=t("Uruguai","URU","🇺🇾");
-const FRA=t("França","FRA","🇫🇷"),SEN=t("Senegal","SEN","🇸🇳"),IRQ=t("Iraque","IRQ","🇮🇶"),NOR=t("Noruega","NOR","🇳🇴");
-const ARG=t("Argentina","ARG","🇦🇷"),ALG=t("Argélia","ALG","🇩🇿"),AUT=t("Áustria","AUT","🇦🇹"),JOR=t("Jordânia","JOR","🇯🇴");
-const POR=t("Portugal","POR","🇵🇹"),COD=t("RD Congo","COD","🇨🇩"),UZB=t("Uzbequistão","UZB","🇺🇿"),COL=t("Colômbia","COL","🇨🇴");
-const ENG=t("Inglaterra","ENG","🏴󠁧󠁢󠁥󠁮󠁧󠁿"),CRO=t("Croácia","CRO","🇭🇷"),GHA=t("Gana","GHA","🇬🇭"),PAN=t("Panamá","PAN","🇵🇦");
+// ─── ESPN API — sem proxy, CORS aberto ──────────────────────────────────────
+const ESPN_BASE = 'https://site.api.espn.com/apis';
+const ESPN_ALL  = `${ESPN_BASE}/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719`;
+const ESPN_ST   = `${ESPN_BASE}/v2/sports/soccer/fifa.world/standings`;
+const ESPN_LIVE = `${ESPN_BASE}/site/v2/sports/soccer/fifa.world/scoreboard`;
+const ESPN_SUM  = id => `${ESPN_BASE}/site/v2/sports/soccer/fifa.world/summary?event=${id}`;
 
-function s(pos, team, pts, j, v, e, d, gp, gc) {
-  return { pos, team, pts, j, v, e, d, gp, gc, sg: gp - gc };
-}
-function m(id, date, rd, home, away, hs, as_) {
-  return { id, date, rd, home, away, hs, as_, status: (hs!==null&&as_!==null)?"FINISHED":"SCHEDULED" };
-}
-
-const GROUPS = [
-  { id:"A", name:"Grupo A",
-    standings:[s(1,MEX,6,2,2,0,0,3,0),s(2,KOR,3,2,1,0,1,2,2),s(3,CZE,1,2,0,1,1,2,4),s(4,RSA,1,2,0,1,1,1,3)],
-    matches:[m("A1","2026-06-11T19:00Z",1,MEX,RSA,2,0),m("A2","2026-06-11T02:00Z",1,KOR,CZE,2,1),
-             m("A3","2026-06-18T17:00Z",2,CZE,RSA,1,1),m("A4","2026-06-19T01:00Z",2,MEX,KOR,1,0),
-             m("A5","2026-06-25T01:00Z",3,CZE,MEX,null,null),m("A6","2026-06-25T01:00Z",3,RSA,KOR,null,null)] },
-  { id:"B", name:"Grupo B",
-    standings:[s(1,CAN,4,2,1,1,0,7,1),s(2,SUI,4,2,1,1,0,5,2),s(3,BIH,1,2,0,1,1,2,5),s(4,QAT,1,2,0,1,1,1,7)],
-    matches:[m("B1","2026-06-12T19:00Z",1,CAN,BIH,1,1),m("B2","2026-06-13T19:00Z",1,QAT,SUI,1,1),
-             m("B3","2026-06-18T21:00Z",2,SUI,BIH,4,1),m("B4","2026-06-18T00:00Z",2,CAN,QAT,6,0),
-             m("B5","2026-06-24T21:00Z",3,SUI,CAN,null,null),m("B6","2026-06-24T21:00Z",3,BIH,QAT,null,null)] },
-  { id:"C", name:"Grupo C",
-    standings:[s(1,SCO,3,1,1,0,0,1,0),s(2,BRA,1,1,0,1,0,1,1),s(3,MAR,1,1,0,1,0,1,1),s(4,HAI,0,1,0,0,1,0,1)],
-    matches:[m("C1","2026-06-13T23:00Z",1,BRA,MAR,1,1),m("C2","2026-06-14T01:00Z",1,HAI,SCO,0,1),
-             m("C3","2026-06-19T22:00Z",2,SCO,MAR,null,null),m("C4","2026-06-20T00:30Z",2,BRA,HAI,null,null),
-             m("C5","2026-06-25T00:00Z",3,SCO,BRA,null,null),m("C6","2026-06-25T00:00Z",3,MAR,HAI,null,null)] },
-  { id:"D", name:"Grupo D",
-    standings:[s(1,USA,3,1,1,0,0,4,1),s(2,AUS,3,1,1,0,0,2,0),s(3,PAR,0,1,0,0,1,1,4),s(4,TUR,0,1,0,0,1,0,2)],
-    matches:[m("D1","2026-06-12T22:00Z",1,USA,PAR,4,1),m("D2","2026-06-13T03:00Z",1,AUS,TUR,2,0),
-             m("D3","2026-06-19T21:00Z",2,USA,AUS,null,null),m("D4","2026-06-20T22:00Z",2,TUR,PAR,null,null),
-             m("D5","2026-06-25T23:00Z",3,USA,TUR,null,null),m("D6","2026-06-26T01:30Z",3,PAR,AUS,null,null)] },
-  { id:"E", name:"Grupo E",
-    standings:[s(1,GER,3,1,1,0,0,7,1),s(2,CIV,3,1,1,0,0,1,0),s(3,ECU,0,1,0,0,1,0,1),s(4,CUW,0,1,0,0,1,1,7)],
-    matches:[m("E1","2026-06-14T17:00Z",1,GER,CUW,7,1),m("E2","2026-06-15T01:00Z",1,CIV,ECU,1,0),
-             m("E3","2026-06-20T22:00Z",2,GER,CIV,null,null),m("E4","2026-06-21T02:00Z",2,ECU,CUW,null,null),
-             m("E5","2026-06-25T22:00Z",3,ECU,GER,null,null),m("E6","2026-06-25T22:00Z",3,CUW,CIV,null,null)] },
-  { id:"F", name:"Grupo F",
-    standings:[s(1,SWE,3,1,1,0,0,5,1),s(2,NED,1,1,0,1,0,2,2),s(3,JPN,1,1,0,1,0,2,2),s(4,TUN,0,1,0,0,1,1,5)],
-    matches:[m("F1","2026-06-14T20:00Z",1,NED,JPN,2,2),m("F2","2026-06-15T04:00Z",1,SWE,TUN,5,1),
-             m("F3","2026-06-20T19:00Z",2,NED,SWE,null,null),m("F4","2026-06-21T06:00Z",2,TUN,JPN,null,null),
-             m("F5","2026-06-26T01:00Z",3,JPN,SWE,null,null),m("F6","2026-06-26T01:00Z",3,TUN,NED,null,null)] },
-  { id:"G", name:"Grupo G",
-    standings:[s(1,NZL,1,1,0,1,0,2,2),s(2,IRN,1,1,0,1,0,2,2),s(3,BEL,1,1,0,1,0,1,1),s(4,EGY,1,1,0,1,0,1,1)],
-    matches:[m("G1","2026-06-15T21:00Z",1,BEL,EGY,1,1),m("G2","2026-06-16T01:00Z",1,IRN,NZL,2,2),
-             m("G3","2026-06-21T21:00Z",2,BEL,IRN,null,null),m("G4","2026-06-22T03:00Z",2,NZL,EGY,null,null),
-             m("G5","2026-06-28T05:00Z",3,EGY,IRN,null,null),m("G6","2026-06-28T05:00Z",3,NZL,BEL,null,null)] },
-  { id:"H", name:"Grupo H",
-    standings:[s(1,ESP,1,1,0,1,0,0,0),s(2,CPV,1,1,0,1,0,0,0),s(3,KSA,1,1,0,1,0,1,1),s(4,URU,1,1,0,1,0,1,1)],
-    matches:[m("H1","2026-06-15T18:00Z",1,ESP,CPV,0,0),m("H2","2026-06-16T00:00Z",1,KSA,URU,1,1),
-             m("H3","2026-06-21T18:00Z",2,ESP,KSA,null,null),m("H4","2026-06-22T00:00Z",2,URU,CPV,null,null),
-             m("H5","2026-06-27T02:00Z",3,CPV,KSA,null,null),m("H6","2026-06-27T02:00Z",3,URU,ESP,null,null)] },
-  { id:"I", name:"Grupo I",
-    standings:[s(1,NOR,3,1,1,0,0,4,1),s(2,FRA,3,1,1,0,0,3,1),s(3,SEN,0,1,0,0,1,1,3),s(4,IRQ,0,1,0,0,1,1,4)],
-    matches:[m("I1","2026-06-16T21:00Z",1,FRA,SEN,3,1),m("I2","2026-06-17T01:00Z",1,IRQ,NOR,1,4),
-             m("I3","2026-06-22T23:00Z",2,FRA,IRQ,null,null),m("I4","2026-06-23T02:00Z",2,NOR,SEN,null,null),
-             m("I5","2026-06-27T21:00Z",3,SEN,IRQ,null,null),m("I6","2026-06-27T21:00Z",3,NOR,FRA,null,null)] },
-  { id:"J", name:"Grupo J",
-    standings:[s(1,ARG,3,1,1,0,0,3,0),s(2,AUT,3,1,1,0,0,3,1),s(3,JOR,0,1,0,0,1,1,3),s(4,ALG,0,1,0,0,1,0,3)],
-    matches:[m("J1","2026-06-17T01:00Z",1,ARG,ALG,3,0),m("J2","2026-06-17T06:00Z",1,AUT,JOR,3,1),
-             m("J3","2026-06-22T19:00Z",2,ARG,AUT,null,null),m("J4","2026-06-23T05:00Z",2,JOR,ALG,null,null),
-             m("J5","2026-06-28T04:00Z",3,ALG,AUT,null,null),m("J6","2026-06-28T04:00Z",3,JOR,ARG,null,null)] },
-  { id:"K", name:"Grupo K",
-    standings:[s(1,COL,3,1,1,0,0,3,1),s(2,POR,1,1,0,1,0,1,1),s(3,COD,1,1,0,1,0,1,1),s(4,UZB,0,1,0,0,1,1,3)],
-    matches:[m("K1","2026-06-17T19:00Z",1,POR,COD,1,1),m("K2","2026-06-18T04:00Z",1,UZB,COL,1,3),
-             m("K3","2026-06-23T19:00Z",2,POR,UZB,null,null),m("K4","2026-06-24T04:00Z",2,COL,COD,null,null),
-             m("K5","2026-06-28T01:30Z",3,COL,POR,null,null),m("K6","2026-06-28T01:30Z",3,COD,UZB,null,null)] },
-  { id:"L", name:"Grupo L",
-    standings:[s(1,ENG,3,1,1,0,0,4,2),s(2,GHA,3,1,1,0,0,1,0),s(3,CRO,0,1,0,0,1,2,4),s(4,PAN,0,1,0,0,1,0,1)],
-    matches:[m("L1","2026-06-17T19:00Z",1,ENG,CRO,4,2),m("L2","2026-06-18T01:00Z",1,GHA,PAN,1,0),
-             m("L3","2026-06-23T22:00Z",2,ENG,GHA,null,null),m("L4","2026-06-24T02:00Z",2,PAN,CRO,null,null),
-             m("L5","2026-06-27T23:00Z",3,CRO,GHA,null,null),m("L6","2026-06-27T23:00Z",3,PAN,ENG,null,null)] },
-];
+const ESPN_STATUS_MAP = {
+  STATUS_SCHEDULED:'TIMED', STATUS_IN_PROGRESS:'IN_PLAY',
+  STATUS_HALFTIME:'PAUSED',  STATUS_FULL_TIME:'FINISHED',
+  STATUS_FINAL:'FINISHED',   STATUS_END_PERIOD:'IN_PLAY',
+};
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let currentGroups = GROUPS;
+let currentGroups = [];
 let knockoutMatches = [];
 let scorersData = [];
 let selectedId = "A";
 let currentView = "grupos";
-const HARDCODED_KEY = "12bea6119d864fa2a562131cef67af85";
-let apiKey = HARDCODED_KEY || localStorage.getItem("wc2026_key") || "";
 let pollingTimer = null;
 let countdownTimer = null;
 let espnTimer = null;
@@ -656,6 +577,7 @@ function renderToday() {
 
     const cls = live ? "is-live" : finished ? "is-finished" : "";
 
+    const todayVenue = match.venue ? `<div class="today-venue">📍 ${match.venue}${match.venueCity?`, ${match.venueCity}`:""}</div>` : "";
     return `<div class="today-card ${cls}" onclick="selectGroup('${match.groupId}')">
       <div class="today-card-top">
         <span class="today-group-badge">GRUPO ${match.groupId}</span>
@@ -672,6 +594,7 @@ function renderToday() {
           <span>${match.away.flag}</span>
         </div>
       </div>
+      ${todayVenue}
     </div>`;
   }).join("");
 
@@ -767,6 +690,19 @@ function renderMatches(group) {
       const awayLogo = match.away.crest
         ? `<img src="${match.away.crest}" class="team-logo" onerror="this.outerHTML='<span class=flag>${match.away.flag}</span>'">`
         : `<span class="flag">${match.away.flag}</span>`;
+      const venueHtml = match.venue ? `<div class="match-venue">📍 ${match.venue}${match.venueCity?`, ${match.venueCity}`:""}</div>` : "";
+      // Gols do card
+      const goalsHtml = (finished || live) && (match.goals||[]).length
+        ? `<div class="match-goals">${(match.goals||[]).map(g => {
+            const isHome = (match.home.short === (g.team?.abbreviation||""));
+            const ath = g.athletesInvolved?.[0];
+            const name = ath?.shortName || ath?.displayName || "";
+            const clock = g.clock?.displayValue || "";
+            const pen = g.penaltyKick ? "(P)" : "";
+            const og = g.ownGoal ? "(AG)" : "";
+            return `<span class="mg${isHome?" mg-home":" mg-away"}">${isHome?"⚽":""}${name}${pen||og} ${clock}${isHome?"":" ⚽"}</span>`;
+          }).join("")}</div>`
+        : "";
       return `<div class="match-card${live?" is-live":""}">
         ${infoHtml}
         <div class="match-row">
@@ -782,6 +718,7 @@ function renderMatches(group) {
             ${awayLogo}
           </span>
         </div>
+        ${goalsHtml}${venueHtml}
       </div>`;
     }).join("");
     return `<div class="round-section"><div class="round-label">Rodada ${rd}</div>${cards}</div>`;
@@ -870,42 +807,53 @@ function renderLiveNow() {
     const rdLabel = m.rd ? `Rodada ${m.rd}` : (m.stageName || "");
     const chips = [
       rdLabel ? `<span class="ln-meta-chip">📋 ${rdLabel}</span>` : "",
+      venueChip,
       m.referee ? `<span class="ln-meta-chip">🟡 ${m.referee}</span>` : "",
     ].filter(Boolean).join("");
 
-    // Eventos ESPN: gols e cartões em ordem cronológica
+    // Eventos: usa dados do match (injetados pelo espnTick) ou cache ESPN direto
+    const mGoals   = m.goals   || espn?.goals   || [];
+    const mYellows = m.yellows || espn?.yellows  || [];
+    const mReds    = m.reds    || espn?.reds     || [];
     let eventsHtml = "";
-    if (espn) {
-      const homeId = espn.homeId, awayId = espn.awayId;
+    {
+      const homeAbbr = m.home.short;
+      const awayAbbr = m.away.short;
       const allEvents = [
-        ...espn.goals.map(d => ({...d, _t:"goal"})),
-        ...espn.yellows.map(d => ({...d, _t:"yellow"})),
-        ...espn.reds.map(d => ({...d, _t:"red"})),
+        ...mGoals.map(d => ({...d, _t:"goal"})),
+        ...mYellows.map(d => ({...d, _t:"yellow"})),
+        ...mReds.map(d => ({...d, _t:"red"})),
       ].sort((a,b) => (a.clock?.value||0) - (b.clock?.value||0));
 
       if (allEvents.length) {
         const evRows = allEvents.map(d => {
-          const clk  = d.clock?.displayValue || "?";
-          const ath  = d.athletesInvolved?.[0];
-          const name = ath?.shortName || ath?.displayName || "?";
-          const tid  = d.team?.id;
-          const side = tid === homeId ? m.home.short : (tid === awayId ? m.away.short : "");
+          const clk   = d.clock?.displayValue || "";
+          const ath   = d.athletesInvolved?.[0];
+          const name  = ath?.shortName || ath?.displayName || "?";
+          const tAbbr = d.team?.abbreviation || "";
+          const isHome = tAbbr === homeAbbr;
           const icon = d._t === "goal"
-            ? (d.ownGoal ? "⚽ CG" : d.penaltyKick ? "⚽ (P)" : "⚽")
+            ? (d.ownGoal ? "⚽ AG" : d.penaltyKick ? "⚽ (P)" : "⚽")
             : d._t === "yellow" ? "🟡" : "🔴";
+          const side = isHome ? homeAbbr : awayAbbr;
           return `<div class="ln-event">
             <span class="ln-event-min">${clk}</span>
             <span class="ln-event-icon">${icon}</span>
             <span class="ln-event-name">${name}</span>
-            ${side ? `<span class="ln-event-team">${side}</span>` : ""}
+            <span class="ln-event-team">${side}</span>
           </div>`;
         }).join("");
         eventsHtml = `<div class="ln-events">
-          <div class="ln-events-title">Gols &amp; Cartões</div>
+          <div class="ln-events-title">⚽ Gols &amp; Cartões</div>
           ${evRows}
         </div>`;
       }
     }
+
+    // Estádio
+    const venueChip = m.venue
+      ? `<span class="ln-meta-chip">📍 ${m.venue}${m.venueCity ? `, ${m.venueCity}` : ""}</span>`
+      : "";
 
     // Mini group standings
     let standingsHtml = "";
@@ -1224,7 +1172,7 @@ async function renderScorers() {
       <div class="podium-medal">${medals[i]}</div>
       <div class="podium-photo-wrap">${playerImg}<div class="podium-team-badge-wrap">${teamImg}</div></div>
       <div class="podium-name">${s.player.name}</div>
-      <div class="podium-team">${s.team.shortName||s.team.name}</div>
+      <div class="podium-team">${s.team.name || s.team.tla}</div>
       <div class="podium-goals"><span class="${goalColors[i]}">${s.goals}</span></div>
       <div class="podium-goals-lbl">${s.goals===1?"gol":"gols"}</div>
       ${ast}
@@ -1252,7 +1200,7 @@ async function renderScorers() {
           ${playerThumb}
           <div>
             <div class="sc-player-name">${s.player.name}</div>
-            <div class="sc-team">${teamImg} ${s.team.shortName||s.team.name}</div>
+            <div class="sc-team">${teamImg} ${s.team.name || s.team.tla}</div>
           </div>
         </div>
         <div class="sc-bar"><div class="sc-bar-fill" style="width:${barW}%"></div></div>
@@ -1327,61 +1275,12 @@ function selectGroup(id) {
 }
 
 // ─── API ─────────────────────────────────────────────────────────────────────
-const API_BASE = "https://api.football-data.org/v4";
-
-const PROXY_LIST = [
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://proxy.cors.sh/${u}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-];
-
-// Cache do proxy mais rápido na sessão
-let _fastProxy = null;
-
-async function apiFetch(path, headers) {
-  const url = API_BASE + path;
-  const TIMEOUT_MS = 6000;
-
-  function fetchWithTimeout(proxyUrl) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-    return fetch(proxyUrl, { headers, signal: ctrl.signal })
-      .then(r => { clearTimeout(t); return r; })
-      .catch(e => { clearTimeout(t); throw e; });
-  }
-
-  // Tenta o proxy que funcionou mais rápido na última vez
-  if (_fastProxy) {
-    try {
-      const r = await fetchWithTimeout(_fastProxy(url));
-      if (r.status !== 0) return r; // qualquer resposta HTTP válida
-    } catch { _fastProxy = null; }
-  }
-
-  // Race: dispara todos os proxies ao mesmo tempo, usa o primeiro que responder
-  const abort = new AbortController();
-  let winner = null;
-  try {
-    const races = PROXY_LIST.map(mkUrl =>
-      fetchWithTimeout(mkUrl(url)).then(r => {
-        if (!winner) { winner = mkUrl; }
-        return r;
-      })
-    );
-    const r = await Promise.any(races);
-    if (winner) _fastProxy = winner;
-    abort.abort();
-    return r;
-  } catch {
-    throw new Error("Todos os proxies CORS falharam. Verifique sua conexão.");
-  }
-}
-
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
 function setLoading(on) {
   const dot = document.getElementById("live-dot");
   const lbl = document.getElementById("live-label");
   if (dot) dot.className = on ? "dot pulse" : "dot on";
-  if (lbl) lbl.textContent = on ? "Atualizando…" : `Ao vivo · tabelas em ${countdown}s`;
+  if (lbl) lbl.textContent = on ? "Atualizando…" : `Ao vivo · ESPN · atualiza em ${countdown}s`;
 }
 
 function showError(html) {
@@ -1392,17 +1291,12 @@ function hideError() {
   document.getElementById("error-banner").classList.remove("visible");
 }
 
-// Controla qual ciclo estamos para decidir se fazemos full ou quick refresh
-let _fetchCycle = 0;
-// Cache das últimas respostas de standings e scorers
-let _cachedStandings = null;
-let _cachedScorers   = null;
-// Cache dos dados ao vivo da ESPN (CORS aberto, sem proxy)
+// ─── ESPN LIVE LOOP (15s) — scores, gols, cartões ────────────────────────────
 let espnLiveCache = {}; // chave: "HTLA-ATLA"
 
 async function fetchESPNEvents() {
   try {
-    const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard');
+    const r = await fetch(ESPN_LIVE);
     if (!r.ok) return;
     const data = await r.json();
     const newCache = {};
@@ -1412,47 +1306,38 @@ async function fetchESPNEvents() {
       const home = comp.competitors?.find(t => t.homeAway === 'home');
       const away = comp.competitors?.find(t => t.homeAway === 'away');
       if (!home || !away) continue;
-      const sType = comp.status?.type?.name || '';
       const details = comp.details || [];
-      const goals = details.filter(d => d.scoringPlay);
-      const yellows = details.filter(d => d.yellowCard && !d.redCard);
-      const reds    = details.filter(d => d.redCard);
       newCache[`${home.team.abbreviation}-${away.team.abbreviation}`] = {
         homeScore: home.score != null ? parseInt(home.score) : null,
         awayScore: away.score != null ? parseInt(away.score) : null,
-        homeId: home.team.id,
-        awayId: away.team.id,
-        status: sType,   // STATUS_IN_PROGRESS, STATUS_HALFTIME, STATUS_FINAL, etc.
+        status: comp.status?.type?.name || '',
         clock:  comp.status?.displayClock || '',
         period: comp.status?.period ?? null,
-        goals, yellows, reds,
+        goals:   details.filter(d => d.scoringPlay),
+        yellows: details.filter(d => d.yellowCard && !d.redCard),
+        reds:    details.filter(d => d.redCard),
       };
     }
     espnLiveCache = newCache;
-  } catch { /* silent – mantém cache anterior */ }
+  } catch { /* mantém cache anterior */ }
 }
 
-// Loop ESPN independente: atualiza a cada 15s sem precisar de proxy
 async function espnTick() {
   await fetchESPNEvents();
-  // Se ESPN encontrou jogos ao vivo mas currentGroups ainda é estático,
-  // injeta os dados ESPN diretamente no cache para exibir mesmo sem football-data.org
-  const liveKeys = Object.keys(espnLiveCache).filter(k => {
-    const st = espnLiveCache[k].status;
-    return st === "STATUS_IN_PROGRESS" || st === "STATUS_HALFTIME" || st === "STATUS_SECOND_HALF";
-  });
-  if (liveKeys.length && currentGroups === GROUPS) {
-    // Atualiza scores nos grupos estáticos para que renderLiveNow detecte como live
-    for (const key of liveKeys) {
-      const [htla, atla] = key.split("-");
-      const espn = espnLiveCache[key];
-      for (const g of currentGroups) {
-        for (const match of g.matches) {
-          if (match.home.short === htla && match.away.short === atla) {
-            match.status = "IN_PLAY";
-            match.hs     = espn.homeScore;
-            match.as_    = espn.awayScore;
-          }
+  // Injeta scores ESPN nos grupos já carregados
+  for (const [key, espn] of Object.entries(espnLiveCache)) {
+    const st = ESPN_STATUS_MAP[espn.status] || "TIMED";
+    if (st === "TIMED" && espn.status !== "STATUS_IN_PROGRESS" && espn.status !== "STATUS_HALFTIME") continue;
+    const [htla, atla] = key.split("-");
+    for (const g of currentGroups) {
+      for (const match of g.matches) {
+        if (match.home.short === htla && match.away.short === atla) {
+          match.status = ESPN_STATUS_MAP[espn.status] || match.status;
+          if (espn.homeScore != null) match.hs  = espn.homeScore;
+          if (espn.awayScore != null) match.as_ = espn.awayScore;
+          match.goals   = espn.goals;
+          match.yellows = espn.yellows;
+          match.reds    = espn.reds;
         }
       }
     }
@@ -1461,209 +1346,191 @@ async function espnTick() {
 }
 
 function startESPNLoop() {
-  if (espnTimer) return; // já rodando
-  espnTick(); // busca imediata
+  if (espnTimer) return;
+  espnTick();
   espnTimer = setInterval(espnTick, 15000);
 }
-function stopESPNLoop() {
-  clearInterval(espnTimer);
-  espnTimer = null;
-}
+function stopESPNLoop() { clearInterval(espnTimer); espnTimer = null; }
 
-function _hasAnyLive(matches) {
-  return (matches || []).some(m => {
-    if (m.status === "IN_PLAY" || m.status === "PAUSED") return true;
-    if (m.status === "TIMED") {
-      const diff = Date.now() - new Date(m.utcDate).getTime();
-      return diff > 0 && diff < 120 * 60 * 1000;
-    }
-    return false;
-  });
-}
+// ─── MAIN DATA FETCH (ESPN — sem proxy) ──────────────────────────────────────
+let _fetchCycle  = 0;
+let _lastFullFetch = 0;
 
-async function fetchLive(forceFullRefresh = false) {
-  if (!apiKey) return;
+async function fetchAllData(forceFullRefresh = false) {
   setLoading(true);
-  const headers = { "X-Auth-Token": apiKey };
   _fetchCycle++;
-
-  // Durante ao vivo: refresh rápido só com /matches (a cada ciclo).
-  // Full refresh (standings + scorers) a cada 4 ciclos (~60s) ou na primeira carga.
-  const isLiveSession = _cachedStandings !== null && _hasAnyLive(
-    _cachedStandings ? null : []  // avalia com base no estado atual
-  );
-  const doFull = forceFullRefresh || _fetchCycle === 1 || (_fetchCycle % 4 === 0);
+  const now = Date.now();
+  const doFull = forceFullRefresh || _fetchCycle === 1 || (now - _lastFullFetch > 90000);
 
   try {
-    let mData, sData, scData;
-
     if (doFull) {
-      // Full refresh: standings + matches + scorers em paralelo
-      let sr, mr, scr;
-      try {
-        [sr, mr, scr] = await Promise.all([
-          apiFetch("/competitions/WC/standings?season=2026", headers),
-          apiFetch("/competitions/WC/matches?season=2026",   headers),
-          apiFetch("/competitions/WC/scorers?season=2026&limit=30", headers),
-        ]);
-      } catch (netErr) {
-        const isFile = location.protocol === "file:";
-        showError(isFile
-          ? `<strong>Bloqueio CORS.</strong> Abra um servidor local: <code>python3 -m http.server 8080</code><br><small>${netErr.message}</small>`
-          : `Falha na conexão. Verifique sua internet.<br><small>${netErr.message}</small>`
-        );
-        return;
-      }
-      if (sr.status === 401 || sr.status === 403) {
-        showError(`<strong>Chave inválida (HTTP ${sr.status}).</strong>`); return;
-      }
-      if (sr.status === 404) {
-        showError(`<strong>Competição não encontrada (HTTP 404).</strong>`); return;
-      }
-      if (!sr.ok) {
-        showError(`Erro da API: HTTP ${sr.status}`); return;
-      }
-      [sData, mData, scData] = await Promise.all([sr.json(), mr.json(), scr.json()]);
-      _cachedStandings = sData;
-      _cachedScorers   = scData;
-    } else {
-      // Quick refresh: só /matches (mais leve, retorna mais rápido)
-      let mr;
-      try {
-        mr = await apiFetch("/competitions/WC/matches?season=2026", headers);
-      } catch (netErr) {
-        showError(`Falha na conexão. Tentando novamente em instantes.<br><small>${netErr.message}</small>`);
-        return;
-      }
-      if (!mr.ok) { showError(`Erro da API: HTTP ${mr.status}`); return; }
-      mData   = await mr.json();
-      sData   = _cachedStandings;
-      scData  = _cachedScorers;
+      const [stRes, scRes] = await Promise.all([
+        fetch(ESPN_ST),
+        fetch(ESPN_ALL),
+      ]);
+      if (!stRes.ok) throw new Error(`Standings ESPN: ${stRes.status}`);
+      if (!scRes.ok) throw new Error(`Scoreboard ESPN: ${scRes.status}`);
+      const [stData, scData] = await Promise.all([stRes.json(), scRes.json()]);
+      parseESPNData(stData, scData);
+      _lastFullFetch = now;
     }
-
-    // ESPN loop já está rodando via startLiveMode(); nada a fazer aqui.
-
-    scorersData = ((scData||{}).scorers || []).sort((a, b) => b.goals - a.goals);
-    mergeApiData(sData, mData);
-    if (currentView === "artilheiros") renderScorers();
     hideError();
-    updateLastUpdated(new Date(), true);
+    updateLastUpdated(new Date());
 
-    // football-data.org: 60s ao vivo (standings/scorers não mudam a cada segundo)
-    // A frequência do placar ao vivo vem do loop ESPN (15s, sem proxy)
-    const hasLive = _hasAnyLive(mData.matches);
-    const interval = hasLive ? 60000 : 120000;
+    const hasLive = currentGroups.some(g => g.matches.some(m => isMatchLive(m)));
     countdown = hasLive ? 60 : 120;
     clearInterval(pollingTimer);
-    pollingTimer = setInterval(fetchLive, interval);
+    pollingTimer = setInterval(() => fetchAllData(), hasLive ? 60000 : 120000);
   } catch(e) {
-    showError(`Erro inesperado: ${e.message}`);
+    showError(`Erro ao buscar dados ESPN: ${e.message}`);
   } finally {
     setLoading(false);
   }
 }
 
-// Função global de bandeiras — TLA tem prioridade sobre nome (API usa inglês, dados em PT)
-function getFlag(name, tla) {
-  if (!name && !tla) return "";
-  const nl = (name || "").toLowerCase();
-  const tu = (tla || "").toUpperCase();
-  for (const g of GROUPS) {
-    for (const st of g.standings) {
-      if (st.team.short === tu || st.team.name.toLowerCase() === nl) return st.team.flag;
-    }
-  }
-  return "";
+// Bandeira por TLA (ESPN não fornece emojis)
+function getFlag(name, tla) { return FLAG_MAP[(tla||"").toUpperCase()] || ""; }
+
+// Fase do mata-mata por data
+function getKOStage(dateStr) {
+  const d = new Date(dateStr), mo = d.getUTCMonth()+1, dy = d.getUTCDate();
+  if (mo === 6 || (mo === 7 && dy <= 4)) return {stage:"LAST_32",    label:"Rodada de 32"};
+  if (mo === 7 && dy <= 8)               return {stage:"LAST_16",    label:"Oitavas de Final"};
+  if (mo === 7 && dy <= 12)              return {stage:"QUARTER_FINALS", label:"Quartas de Final"};
+  if (mo === 7 && dy <= 16)              return {stage:"SEMI_FINALS", label:"Semifinal"};
+  if (mo === 7 && dy === 18)             return {stage:"THIRD_PLACE", label:"3.° Lugar"};
+  return                                        {stage:"FINAL",       label:"Final"};
 }
 
-function mergeApiData(sData, mData) {
-  // 1. Mapear teamId → grupo via partidas (únicas que têm "GROUP_A" etc.)
-  const teamGroup = {};
-  for (const m of (mData.matches || [])) {
-    if (!m.group) continue;
-    teamGroup[m.homeTeam.id] = m.group;
-    teamGroup[m.awayTeam.id] = m.group;
+// Converte dados ESPN → formato interno
+function parseESPNData(stData, scData) {
+  // 1. Standings: teamId → grupo + classificação
+  const teamToGroup = {};
+  const groupStMap  = {};
+  for (const grp of stData.children || []) {
+    const gl = (grp.name.match(/Group ([A-L])/) || [])[1] || grp.abbreviation;
+    groupStMap[gl] = [];
+    for (const entry of grp.standings?.entries || []) {
+      const team = entry.team;
+      teamToGroup[team.id] = gl;
+      const st = {};
+      for (const s of entry.stats || []) st[s.name] = s.displayValue;
+      const sg = parseInt((st.pointDifferential||"0").replace("+","")) || 0;
+      groupStMap[gl].push({
+        pos: parseInt(st.rank) || 99,
+        team: { id: team.id, name: team.displayName, short: team.abbreviation,
+                flag: getFlag("", team.abbreviation),
+                crest: team.logos?.[0]?.href || "" },
+        pts: parseInt(st.points) || 0,
+        j:   parseInt(st.gamesPlayed) || 0,
+        v:   parseInt(st.wins)  || 0,
+        e:   parseInt(st.ties)  || 0,
+        d:   parseInt(st.losses)|| 0,
+        gp:  parseInt(st.pointsFor)     || 0,
+        gc:  parseInt(st.pointsAgainst) || 0,
+        sg,
+      });
+    }
+    groupStMap[gl].sort((a,b) => a.pos - b.pos);
   }
 
-  // 2. Tabela TOTAL de standings (48 times, sem divisão de grupo)
-  const totalTable = ((sData.standings || []).find(s => s.type === "TOTAL") || {}).table || [];
-
-  // 3. Organizar standings por grupo
-  const standingsByGroup = {};
-  for (const row of totalTable) {
-    const g = teamGroup[row.team.id];
-    if (!g) continue;
-    if (!standingsByGroup[g]) standingsByGroup[g] = [];
-    standingsByGroup[g].push(row);
-  }
-
-  // 4. Organizar partidas por grupo (só GROUP_STAGE) e knockout separado
+  // 2. Partidas + artilheiros
   const matchesByGroup = {};
-  const koStageNames = {
-    LAST_32:"Rodada de 32", LAST_16:"Oitavas de Final",
-    QUARTER_FINALS:"Quartas de Final", SEMI_FINALS:"Semifinais",
-    THIRD_PLACE:"3.° Lugar", FINAL:"Final"
-  };
   const koList = [];
+  const scorerMap  = {};   // { athleteId: { player, team, goals, matchSet } }
 
-  for (const m of (mData.matches || [])) {
-    const ft = m.score?.fullTime || {};
+  for (const event of scData.events || []) {
+    const comp = event.competitions?.[0];
+    if (!comp) continue;
+    const hComp = comp.competitors?.find(t => t.homeAway === "home");
+    const aComp = comp.competitors?.find(t => t.homeAway === "away");
+    if (!hComp || !aComp) continue;
+
+    const hT = hComp.team, aT = aComp.team;
+    const espnSt   = comp.status?.type?.name || "STATUS_SCHEDULED";
+    const status   = ESPN_STATUS_MAP[espnSt] || "TIMED";
+    const hs       = hComp.score != null ? parseInt(hComp.score) : null;
+    const as_      = aComp.score != null ? parseInt(aComp.score) : null;
+    const venue    = comp.venue || {};
+    const details  = comp.details || [];
+    const goals    = details.filter(d => d.scoringPlay);
+    const yellows  = details.filter(d => d.yellowCard && !d.redCard);
+    const reds     = details.filter(d => d.redCard);
+
+    // Artilheiros: acumula por torneio
+    for (const det of goals) {
+      if (det.ownGoal) continue;
+      const ath = det.athletesInvolved?.[0];
+      if (!ath) continue;
+      const pTeam = det.team?.id === hT.id ? hT : aT;
+      if (!scorerMap[ath.id]) {
+        scorerMap[ath.id] = {
+          player: { name: ath.displayName, shortName: ath.shortName || ath.displayName },
+          team:   { name: pTeam.displayName, tla: pTeam.abbreviation,
+                    crest: pTeam.logos?.[0]?.href || "" },
+          goals: 0, assists: 0, matchSet: new Set(),
+        };
+      }
+      scorerMap[ath.id].goals++;
+      scorerMap[ath.id].matchSet.add(event.id);
+    }
+
+    // Detecta time placeholder (mata-mata futuro)
+    const isRealTeam = tla => tla && tla.length <= 4 && !tla.includes(" ");
     const parsed = {
-      id: m.id,
-      date: m.utcDate,
-      rd: m.matchday || 1,
-      stage: m.stage,
-      home: { name: m.homeTeam.name||null, short: m.homeTeam.tla||"???", flag: getFlag(m.homeTeam.name,m.homeTeam.tla), crest: m.homeTeam.crest||"" },
-      away: { name: m.awayTeam.name||null, short: m.awayTeam.tla||"???", flag: getFlag(m.awayTeam.name,m.awayTeam.tla), crest: m.awayTeam.crest||"" },
-      hs: ft.home ?? null,
-      as_: ft.away ?? null,
-      ht_home: m.score?.halfTime?.home ?? null,
-      ht_away: m.score?.halfTime?.away ?? null,
-      status: m.status,
-      minute: m.minute ?? null,
-      referee: m.referees?.[0]?.name ?? null,
+      id: event.id, date: comp.date || event.date, rd: null,
+      home: { name: isRealTeam(hT.abbreviation) ? hT.displayName : "A definir",
+              short: isRealTeam(hT.abbreviation) ? hT.abbreviation : "???",
+              flag: getFlag("", hT.abbreviation), crest: hT.logos?.[0]?.href || "" },
+      away: { name: isRealTeam(aT.abbreviation) ? aT.displayName : "A definir",
+              short: isRealTeam(aT.abbreviation) ? aT.abbreviation : "???",
+              flag: getFlag("", aT.abbreviation), crest: aT.logos?.[0]?.href || "" },
+      hs, as_, ht_home: null, ht_away: null,
+      status, minute: null, referee: null,
+      venue: venue.fullName || "", venueCity: venue.address?.city || "",
+      goals, yellows, reds,
     };
 
-    if (m.stage === "GROUP_STAGE") {
-      const g = m.group;
-      if (!g) continue;
-      if (!matchesByGroup[g]) matchesByGroup[g] = [];
-      matchesByGroup[g].push({...parsed, home: {...parsed.home, name: parsed.home.name||"?"}, away: {...parsed.away, name: parsed.away.name||"?"}});
-    } else if (koStageNames[m.stage]) {
-      koList.push({...parsed, stageName: koStageNames[m.stage]});
+    const gl = teamToGroup[hT.id] || teamToGroup[aT.id];
+    if (gl) {
+      if (!matchesByGroup[gl]) matchesByGroup[gl] = [];
+      matchesByGroup[gl].push(parsed);
+    } else {
+      const ko = getKOStage(parsed.date);
+      koList.push({...parsed, stage: ko.stage, stageName: ko.label});
     }
+  }
+
+  // Atribui rodada (rd) dentro de cada grupo (6 jogos = 3 rodadas, 2 por rodada)
+  for (const gl in matchesByGroup) {
+    matchesByGroup[gl]
+      .sort((a,b) => new Date(a.date) - new Date(b.date))
+      .forEach((m,i) => { m.rd = Math.floor(i/2)+1; });
   }
 
   knockoutMatches = koList.sort((a,b) => new Date(a.date) - new Date(b.date));
+  scorersData = Object.values(scorerMap)
+    .map(s => ({...s, playedMatches: s.matchSet.size}))
+    .sort((a,b) => b.goals - a.goals);
 
-  // 5. Montar os 12 grupos em ordem A–L
-  const GROUP_KEYS = ["GROUP_A","GROUP_B","GROUP_C","GROUP_D","GROUP_E","GROUP_F",
-                      "GROUP_G","GROUP_H","GROUP_I","GROUP_J","GROUP_K","GROUP_L"];
+  // Monta currentGroups A–L
+  currentGroups = "ABCDEFGHIJKL".split("").map(gl => ({
+    id: gl, name: `Grupo ${gl}`,
+    standings: groupStMap[gl] || [],
+    matches: (matchesByGroup[gl] || []).sort((a,b) =>
+      a.rd !== b.rd ? a.rd - b.rd : new Date(a.date) - new Date(b.date)),
+  }));
 
-  currentGroups = GROUP_KEYS.map((gKey, idx) => {
-    const letter = String.fromCharCode(65 + idx);
-    const rows = standingsByGroup[gKey] || [];
-
-    const standings = rows.map((row, i) => ({
-      pos: i + 1,
-      team: { name: row.team.name||"?", short: row.team.tla||"???", flag: getFlag(row.team.name,row.team.tla), crest: row.team.crest||"" },
-      pts: row.points, j: row.playedGames, v: row.won, e: row.draw, d: row.lost,
-      gp: row.goalsFor, gc: row.goalsAgainst, sg: row.goalDifference,
-    }));
-
-    const matches = (matchesByGroup[gKey] || []).sort((a, b) =>
-      a.rd !== b.rd ? a.rd - b.rd : new Date(a.date) - new Date(b.date)
-    );
-
-    return { id: letter, name: `Grupo ${letter}`, standings, matches };
-  });
-
+  // Garante selectedId válido
+  if (!currentGroups.find(g => g.id === selectedId && g.standings.length)) {
+    selectedId = currentGroups.find(g => g.standings.length)?.id || "A";
+  }
   render();
 }
 
-function updateLastUpdated(date, live) {
-  const t = date.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-  document.getElementById("last-upd").textContent = live ? `Atualizado às ${t}` : `Dados de 19 jun · ${t}`;
+function updateLastUpdated(date) {
+  const t = date.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  document.getElementById("last-upd").textContent = `ESPN · ${t}`;
 }
 
 // ─── LIVE MODE ────────────────────────────────────────────────────────────────
@@ -1671,19 +1538,13 @@ function startLiveMode() {
   isLive = true;
   document.getElementById("live-off").style.display = "none";
   document.getElementById("live-on").style.display = "flex";
-
-  // ESPN inicia IMEDIATAMENTE e independente do football-data.org
-  // (CORS aberto, sem proxy – gols/placar em ~500ms)
+  // Busca full ESPN e inicia loop de scores ao vivo
+  fetchAllData(true);
   startESPNLoop();
-
-  // football-data.org para tabelas/artilheiros (usa proxy – pode ser lento)
-  fetchLive();
-
-  pollingTimer = setInterval(fetchLive, 60000);
   countdownTimer = setInterval(() => {
-    countdown = countdown <= 1 ? countdown : countdown - 1;
+    countdown = Math.max(1, countdown - 1);
     const lbl = document.getElementById("live-label");
-    if (lbl) lbl.textContent = `Ao vivo · tabelas em ${countdown}s`;
+    if (lbl) lbl.textContent = `Ao vivo · ESPN · atualiza em ${countdown}s`;
   }, 1000);
 }
 
@@ -1692,47 +1553,16 @@ function stopLiveMode() {
   clearInterval(pollingTimer);
   clearInterval(countdownTimer);
   stopESPNLoop();
+  pollingTimer = null; countdownTimer = null;
   document.getElementById("live-on").style.display = "none";
-  currentGroups = GROUPS;
   render();
 }
 
-function manualRefresh() { _fetchCycle = 0; fetchLive(true); countdown = 30; }
-
-function clearApiKey() {
-  localStorage.removeItem("wc2026_key");
-  apiKey = "";
-  stopLiveMode();
-  hideError();
-  updateLastUpdated(new Date("2026-06-19T17:30:00Z"), false);
-}
-
-// ─── MODAL ────────────────────────────────────────────────────────────────────
-function openModal() {
-  document.getElementById("api-key-input").value = apiKey;
-  document.getElementById("save-btn").disabled = !apiKey;
-  document.getElementById("modal").classList.add("open");
-  setTimeout(() => document.getElementById("api-key-input").focus(), 50);
-}
-function closeModal() { document.getElementById("modal").classList.remove("open"); }
-function closeModalOnOverlay(e) { if (e.target.id==="modal") closeModal(); }
-
-document.getElementById("api-key-input").addEventListener("input", function() {
-  document.getElementById("save-btn").disabled = !this.value.trim();
-});
-
-function saveApiKey(e) {
-  e.preventDefault();
-  const key = document.getElementById("api-key-input").value.trim();
-  if (!key) return;
-  localStorage.setItem("wc2026_key", key);
-  apiKey = key;
-  closeModal();
-  startLiveMode();
-}
+function manualRefresh() { _fetchCycle = 0; fetchAllData(true); countdown = 60; }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-render();
+// Carrega dados ESPN imediatamente (sem precisar de chave)
+startLiveMode();
 
 // Aviso preventivo para file://
 if (location.protocol === "file:") {
