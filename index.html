@@ -222,6 +222,15 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .ln-table td:nth-child(2){display:flex;align-items:center;gap:5px}
 .ln-table td:last-child,.ln-table td:nth-child(3){text-align:center;font-weight:700;color:var(--text-1)}
 .ln-table tr:not(:last-child) td{border-bottom:1px solid rgba(255,255,255,.05)}
+/* events (gols/cartões) */
+.ln-events{padding:0 14px 14px;border-top:1px solid rgba(255,255,255,.07);margin-top:2px}
+.ln-events-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);padding-top:10px;margin-bottom:7px}
+.ln-event{display:flex;align-items:center;gap:7px;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.ln-event:last-child{border-bottom:none}
+.ln-event-min{font-size:11px;font-weight:700;color:var(--text-3);min-width:30px;text-align:right}
+.ln-event-icon{font-size:14px;line-height:1;min-width:18px;text-align:center}
+.ln-event-name{flex:1;color:var(--text-1);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln-event-team{font-size:11px;color:var(--text-3);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:999px}
 
 /* KNOCKOUT */
 .knockout-view{display:none;flex-direction:column;gap:28px;padding-top:12px}
@@ -809,16 +818,38 @@ function renderLiveNow() {
   if (!live.length) { section.classList.remove("visible"); return; }
 
   const cards = live.map(m => {
-    const confirmed = isMatchConfirmedLive(m);
     const onclick = m.groupId ? `selectGroup('${m.groupId}')` : `setView('eliminatorias')`;
     const label = m.groupId ? `GRUPO ${m.groupId}` : (m.stageName || "MATA-MATA");
 
-    // Period / elapsed time (usa placar HT como sinal real do período)
-    const { label: periodLabel, elapsed } = calcPeriod(m.date, m.status, m.ht_home, m.ht_away);
-    const elapsedHtml = (confirmed && m.status !== "PAUSED")
-      ? `<span class="ln-elapsed">${elapsed}<small>'</small></span>`
-      : `<span class="ln-elapsed" style="font-size:14px">${periodLabel}</span>`;
-    const periodPill = `<span class="ln-period">${periodLabel}</span>`;
+    // Dados ESPN (CORS aberto – placar/eventos mais precisos)
+    const espn = espnLiveCache[`${m.home.short}-${m.away.short}`];
+
+    // Placar: ESPN tem prioridade
+    const scoreHome = (espn?.homeScore != null) ? espn.homeScore : (m.hs ?? "-");
+    const scoreAway = (espn?.awayScore != null) ? espn.awayScore : (m.as_ ?? "-");
+
+    // Período / relógio via ESPN
+    let periodLabel, clockDisplay;
+    if (espn) {
+      const st = espn.status;
+      if (st === "STATUS_HALFTIME") {
+        periodLabel = "INTERVALO"; clockDisplay = espn.clock || "HT";
+      } else if (st === "STATUS_FINAL" || st === "STATUS_FULL_TIME") {
+        periodLabel = "ENCERRADO"; clockDisplay = "FT";
+      } else if (espn.period === 2) {
+        periodLabel = "2° TEMPO"; clockDisplay = espn.clock;
+      } else {
+        periodLabel = "1° TEMPO"; clockDisplay = espn.clock;
+      }
+    } else {
+      const {label: pl, elapsed: pe} = calcPeriod(m.date, m.status, m.ht_home, m.ht_away);
+      periodLabel = pl; clockDisplay = `~${pe}'`;
+    }
+
+    const isHalftime = periodLabel === "INTERVALO";
+    const elapsedHtml = isHalftime
+      ? `<span class="ln-elapsed" style="font-size:13px">HT</span>`
+      : `<span class="ln-elapsed">${clockDisplay}</span>`;
 
     // Team logos
     function teamImg(t) {
@@ -828,20 +859,54 @@ function renderLiveNow() {
     }
 
     // HT score sub-label
-    const htHtml = (m.ht_home !== null && m.ht_away !== null)
-      ? `<span class="ln-score-ht">1° T: ${m.ht_home}–${m.ht_away}</span>`
-      : (m.status === "PAUSED")
-        ? `<span class="ln-score-ht">Intervalo</span>`
+    const htHtml = isHalftime
+      ? `<span class="ln-score-ht">Intervalo</span>`
+      : (m.ht_home !== null && m.ht_away !== null && periodLabel === "2° TEMPO")
+        ? `<span class="ln-score-ht">1° T: ${m.ht_home}–${m.ht_away}</span>`
         : "";
 
-    // Meta chips: round, referee
+    // Meta chips
     const rdLabel = m.rd ? `Rodada ${m.rd}` : (m.stageName || "");
     const chips = [
       rdLabel ? `<span class="ln-meta-chip">📋 ${rdLabel}</span>` : "",
       m.referee ? `<span class="ln-meta-chip">🟡 ${m.referee}</span>` : "",
     ].filter(Boolean).join("");
 
-    // Mini group standings table
+    // Eventos ESPN: gols e cartões em ordem cronológica
+    let eventsHtml = "";
+    if (espn) {
+      const homeId = espn.homeId, awayId = espn.awayId;
+      const allEvents = [
+        ...espn.goals.map(d => ({...d, _t:"goal"})),
+        ...espn.yellows.map(d => ({...d, _t:"yellow"})),
+        ...espn.reds.map(d => ({...d, _t:"red"})),
+      ].sort((a,b) => (a.clock?.value||0) - (b.clock?.value||0));
+
+      if (allEvents.length) {
+        const evRows = allEvents.map(d => {
+          const clk  = d.clock?.displayValue || "?";
+          const ath  = d.athletesInvolved?.[0];
+          const name = ath?.shortName || ath?.displayName || "?";
+          const tid  = d.team?.id;
+          const side = tid === homeId ? m.home.short : (tid === awayId ? m.away.short : "");
+          const icon = d._t === "goal"
+            ? (d.ownGoal ? "⚽ CG" : d.penaltyKick ? "⚽ (P)" : "⚽")
+            : d._t === "yellow" ? "🟡" : "🔴";
+          return `<div class="ln-event">
+            <span class="ln-event-min">${clk}</span>
+            <span class="ln-event-icon">${icon}</span>
+            <span class="ln-event-name">${name}</span>
+            ${side ? `<span class="ln-event-team">${side}</span>` : ""}
+          </div>`;
+        }).join("");
+        eventsHtml = `<div class="ln-events">
+          <div class="ln-events-title">Gols &amp; Cartões</div>
+          ${evRows}
+        </div>`;
+      }
+    }
+
+    // Mini group standings
     let standingsHtml = "";
     if (m.groupId) {
       const grp = currentGroups.find(g => g.id === m.groupId);
@@ -860,7 +925,7 @@ function renderLiveNow() {
           </tr>`;
         }).join("");
         standingsHtml = `<div class="ln-table-wrap">
-          <div class="ln-table-title">Classificação Grupo ${m.groupId}</div>
+          <div class="ln-table-title">Classificação — Grupo ${m.groupId}</div>
           <table class="ln-table"><tbody>${rows}</tbody></table>
         </div>`;
       }
@@ -871,7 +936,7 @@ function renderLiveNow() {
         <div class="ln-live-pill"><span class="dot live-red"></span>${label}</div>
         <div style="display:flex;align-items:center;gap:8px">
           ${elapsedHtml}
-          ${periodPill}
+          <span class="ln-period">${periodLabel}</span>
         </div>
       </div>
       <div class="ln-score-area">
@@ -882,9 +947,9 @@ function renderLiveNow() {
         </div>
         <div class="ln-score-center">
           <div class="ln-score-main">
-            <span>${m.hs ?? "-"}</span>
+            <span>${scoreHome}</span>
             <span class="ln-score-sep">–</span>
-            <span>${m.as_ ?? "-"}</span>
+            <span>${scoreAway}</span>
           </div>
           ${htHtml}
         </div>
@@ -895,6 +960,7 @@ function renderLiveNow() {
         </div>
       </div>
       ${chips ? `<div class="ln-meta">${chips}</div>` : ""}
+      ${eventsHtml}
       ${standingsHtml}
     </div>`;
   }).join("");
@@ -1326,6 +1392,40 @@ let _fetchCycle = 0;
 // Cache das últimas respostas de standings e scorers
 let _cachedStandings = null;
 let _cachedScorers   = null;
+// Cache dos dados ao vivo da ESPN (CORS aberto, sem proxy)
+let espnLiveCache = {}; // chave: "HTLA-ATLA"
+
+async function fetchESPNEvents() {
+  try {
+    const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard');
+    if (!r.ok) return;
+    const data = await r.json();
+    const newCache = {};
+    for (const event of data.events || []) {
+      const comp = event.competitions?.[0];
+      if (!comp) continue;
+      const home = comp.competitors?.find(t => t.homeAway === 'home');
+      const away = comp.competitors?.find(t => t.homeAway === 'away');
+      if (!home || !away) continue;
+      const sType = comp.status?.type?.name || '';
+      const details = comp.details || [];
+      const goals = details.filter(d => d.scoringPlay);
+      const yellows = details.filter(d => d.yellowCard && !d.redCard);
+      const reds    = details.filter(d => d.redCard);
+      newCache[`${home.team.abbreviation}-${away.team.abbreviation}`] = {
+        homeScore: home.score != null ? parseInt(home.score) : null,
+        awayScore: away.score != null ? parseInt(away.score) : null,
+        homeId: home.team.id,
+        awayId: away.team.id,
+        status: sType,   // STATUS_IN_PROGRESS, STATUS_HALFTIME, STATUS_FINAL, etc.
+        clock:  comp.status?.displayClock || '',
+        period: comp.status?.period ?? null,
+        goals, yellows, reds,
+      };
+    }
+    espnLiveCache = newCache;
+  } catch { /* silent – mantém cache anterior */ }
+}
 
 function _hasAnyLive(matches) {
   return (matches || []).some(m => {
@@ -1397,6 +1497,9 @@ async function fetchLive(forceFullRefresh = false) {
       sData   = _cachedStandings;
       scData  = _cachedScorers;
     }
+
+    // ESPN buscada em paralelo (CORS aberto, sem proxy) – re-renderiza após obter gols/cartões
+    fetchESPNEvents().then(() => renderLiveNow());
 
     scorersData = ((scData||{}).scorers || []).sort((a, b) => b.goals - a.goals);
     mergeApiData(sData, mData);
