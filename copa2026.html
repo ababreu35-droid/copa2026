@@ -1433,14 +1433,37 @@ async function fetchESPNEvents() {
 }
 
 // Loop ESPN independente: atualiza a cada 15s sem precisar de proxy
+async function espnTick() {
+  await fetchESPNEvents();
+  // Se ESPN encontrou jogos ao vivo mas currentGroups ainda é estático,
+  // injeta os dados ESPN diretamente no cache para exibir mesmo sem football-data.org
+  const liveKeys = Object.keys(espnLiveCache).filter(k => {
+    const st = espnLiveCache[k].status;
+    return st === "STATUS_IN_PROGRESS" || st === "STATUS_HALFTIME" || st === "STATUS_SECOND_HALF";
+  });
+  if (liveKeys.length && currentGroups === GROUPS) {
+    // Atualiza scores nos grupos estáticos para que renderLiveNow detecte como live
+    for (const key of liveKeys) {
+      const [htla, atla] = key.split("-");
+      const espn = espnLiveCache[key];
+      for (const g of currentGroups) {
+        for (const match of g.matches) {
+          if (match.home.short === htla && match.away.short === atla) {
+            match.status = "IN_PLAY";
+            match.hs     = espn.homeScore;
+            match.as_    = espn.awayScore;
+          }
+        }
+      }
+    }
+  }
+  renderLiveNow();
+}
+
 function startESPNLoop() {
   if (espnTimer) return; // já rodando
-  // Busca imediata
-  fetchESPNEvents().then(() => renderLiveNow());
-  espnTimer = setInterval(async () => {
-    await fetchESPNEvents();
-    renderLiveNow();
-  }, 15000);
+  espnTick(); // busca imediata
+  espnTimer = setInterval(espnTick, 15000);
 }
 function stopESPNLoop() {
   clearInterval(espnTimer);
@@ -1518,8 +1541,7 @@ async function fetchLive(forceFullRefresh = false) {
       scData  = _cachedScorers;
     }
 
-    // ESPN: garante que o loop dedicado está rodando (15s, direto sem proxy)
-    startESPNLoop();
+    // ESPN loop já está rodando via startLiveMode(); nada a fazer aqui.
 
     scorersData = ((scData||{}).scorers || []).sort((a, b) => b.goals - a.goals);
     mergeApiData(sData, mData);
@@ -1650,9 +1672,14 @@ function startLiveMode() {
   document.getElementById("live-off").style.display = "none";
   document.getElementById("live-on").style.display = "flex";
 
+  // ESPN inicia IMEDIATAMENTE e independente do football-data.org
+  // (CORS aberto, sem proxy – gols/placar em ~500ms)
+  startESPNLoop();
+
+  // football-data.org para tabelas/artilheiros (usa proxy – pode ser lento)
   fetchLive();
 
-  pollingTimer = setInterval(fetchLive, 30000);
+  pollingTimer = setInterval(fetchLive, 60000);
   countdownTimer = setInterval(() => {
     countdown = countdown <= 1 ? countdown : countdown - 1;
     const lbl = document.getElementById("live-label");
