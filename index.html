@@ -1243,29 +1243,52 @@ function selectGroup(id) {
 // ─── API ─────────────────────────────────────────────────────────────────────
 const API_BASE = "https://api.football-data.org/v4";
 
-// Proxies CORS testados em ordem; o primeiro que responder OK é usado
 const PROXY_LIST = [
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://proxy.cors.sh/${u}`,
-  u => `https://corsproxy.io/?${u}`,   // formato alternativo sem encoding
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
 ];
+
+// Cache do proxy mais rápido na sessão
+let _fastProxy = null;
 
 async function apiFetch(path, headers) {
   const url = API_BASE + path;
+  const TIMEOUT_MS = 6000;
 
-  // A football-data.org não envia cabeçalhos CORS para browsers,
-  // então sempre usamos proxy independente de file:// ou https://
-  let lastErr = new Error("Todos os proxies CORS falharam");
-  for (const mkUrl of PROXY_LIST) {
-    try {
-      const proxyUrl = mkUrl(url);
-      const r = await fetch(proxyUrl, { headers });
-      return r;
-    } catch (e) {
-      lastErr = e;
-    }
+  function fetchWithTimeout(proxyUrl) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    return fetch(proxyUrl, { headers, signal: ctrl.signal })
+      .then(r => { clearTimeout(t); return r; })
+      .catch(e => { clearTimeout(t); throw e; });
   }
-  throw lastErr;
+
+  // Tenta o proxy que funcionou mais rápido na última vez
+  if (_fastProxy) {
+    try {
+      const r = await fetchWithTimeout(_fastProxy(url));
+      if (r.status !== 0) return r; // qualquer resposta HTTP válida
+    } catch { _fastProxy = null; }
+  }
+
+  // Race: dispara todos os proxies ao mesmo tempo, usa o primeiro que responder
+  const abort = new AbortController();
+  let winner = null;
+  try {
+    const races = PROXY_LIST.map(mkUrl =>
+      fetchWithTimeout(mkUrl(url)).then(r => {
+        if (!winner) { winner = mkUrl; }
+        return r;
+      })
+    );
+    const r = await Promise.any(races);
+    if (winner) _fastProxy = winner;
+    abort.abort();
+    return r;
+  } catch {
+    throw new Error("Todos os proxies CORS falharam. Verifique sua conexão.");
+  }
 }
 
 function setLoading(on) {
@@ -1283,78 +1306,93 @@ function hideError() {
   document.getElementById("error-banner").classList.remove("visible");
 }
 
-async function fetchLive() {
+// Controla qual ciclo estamos para decidir se fazemos full ou quick refresh
+let _fetchCycle = 0;
+// Cache das últimas respostas de standings e scorers
+let _cachedStandings = null;
+let _cachedScorers   = null;
+
+function _hasAnyLive(matches) {
+  return (matches || []).some(m => {
+    if (m.status === "IN_PLAY" || m.status === "PAUSED") return true;
+    if (m.status === "TIMED") {
+      const diff = Date.now() - new Date(m.utcDate).getTime();
+      return diff > 0 && diff < 120 * 60 * 1000;
+    }
+    return false;
+  });
+}
+
+async function fetchLive(forceFullRefresh = false) {
   if (!apiKey) return;
   setLoading(true);
   const headers = { "X-Auth-Token": apiKey };
+  _fetchCycle++;
+
+  // Durante ao vivo: refresh rápido só com /matches (a cada ciclo).
+  // Full refresh (standings + scorers) a cada 4 ciclos (~60s) ou na primeira carga.
+  const isLiveSession = _cachedStandings !== null && _hasAnyLive(
+    _cachedStandings ? null : []  // avalia com base no estado atual
+  );
+  const doFull = forceFullRefresh || _fetchCycle === 1 || (_fetchCycle % 4 === 0);
+
   try {
-    let sr, mr, scr;
-    try {
-      [sr, mr, scr] = await Promise.all([
-        apiFetch("/competitions/WC/standings?season=2026", headers),
-        apiFetch("/competitions/WC/matches?season=2026", headers),
-        apiFetch("/competitions/WC/scorers?season=2026&limit=30", headers),
-      ]);
-    } catch (netErr) {
-      // Falha de rede / todos proxies falharam
-      const isFile = location.protocol === "file:";
-      if (isFile) {
-        showError(
-          `<strong>Bloqueio CORS:</strong> todos os proxies automáticos falharam.<br>
-          <strong>Solução em 2 passos:</strong><br>
-          1. Abra o Terminal na pasta <code>copa</code><br>
-          2. Execute: <code>python3 -m http.server 8080</code><br>
-          3. Acesse: <a href="http://localhost:8080/copa2026.html" target="_blank">http://localhost:8080/copa2026.html</a><br>
-          <small style="opacity:.7">Detalhe técnico: ${netErr.message}</small>`
+    let mData, sData, scData;
+
+    if (doFull) {
+      // Full refresh: standings + matches + scorers em paralelo
+      let sr, mr, scr;
+      try {
+        [sr, mr, scr] = await Promise.all([
+          apiFetch("/competitions/WC/standings?season=2026", headers),
+          apiFetch("/competitions/WC/matches?season=2026",   headers),
+          apiFetch("/competitions/WC/scorers?season=2026&limit=30", headers),
+        ]);
+      } catch (netErr) {
+        const isFile = location.protocol === "file:";
+        showError(isFile
+          ? `<strong>Bloqueio CORS.</strong> Abra um servidor local: <code>python3 -m http.server 8080</code><br><small>${netErr.message}</small>`
+          : `Falha na conexão. Verifique sua internet.<br><small>${netErr.message}</small>`
         );
-      } else {
-        showError(`Falha ao buscar dados ao vivo. Verifique sua conexão e tente novamente.<br><small style="opacity:.7">${netErr.message}</small>`);
+        return;
       }
-      return;
+      if (sr.status === 401 || sr.status === 403) {
+        showError(`<strong>Chave inválida (HTTP ${sr.status}).</strong>`); return;
+      }
+      if (sr.status === 404) {
+        showError(`<strong>Competição não encontrada (HTTP 404).</strong>`); return;
+      }
+      if (!sr.ok) {
+        showError(`Erro da API: HTTP ${sr.status}`); return;
+      }
+      [sData, mData, scData] = await Promise.all([sr.json(), mr.json(), scr.json()]);
+      _cachedStandings = sData;
+      _cachedScorers   = scData;
+    } else {
+      // Quick refresh: só /matches (mais leve, retorna mais rápido)
+      let mr;
+      try {
+        mr = await apiFetch("/competitions/WC/matches?season=2026", headers);
+      } catch (netErr) {
+        showError(`Falha na conexão. Tentando novamente em instantes.<br><small>${netErr.message}</small>`);
+        return;
+      }
+      if (!mr.ok) { showError(`Erro da API: HTTP ${mr.status}`); return; }
+      mData   = await mr.json();
+      sData   = _cachedStandings;
+      scData  = _cachedScorers;
     }
 
-    // Trata erros HTTP da API
-    if (sr.status === 401 || sr.status === 403) {
-      showError(
-        `<strong>Chave inválida (HTTP ${sr.status}).</strong> 
-        Verifique se a chave está correta no 
-        <a href="https://www.football-data.org/client/register" target="_blank">painel da API</a>.`
-      );
-      return;
-    }
-    if (sr.status === 404) {
-      showError(
-        `<strong>Competição não encontrada (HTTP 404).</strong> 
-        O plano gratuito pode ainda não incluir a Copa 2026. 
-        Verifique em <a href="https://www.football-data.org/coverage" target="_blank">football-data.org/coverage</a>.`
-      );
-      return;
-    }
-    if (!sr.ok) {
-      showError(`Erro da API: <strong>HTTP ${sr.status}</strong>. Tente novamente em instantes.`);
-      return;
-    }
-
-    const [sData, mData, scData] = await Promise.all([sr.json(), mr.json(), scr.json()]);
-    scorersData = (scData.scorers || []).sort((a, b) => b.goals - a.goals);
+    scorersData = ((scData||{}).scorers || []).sort((a, b) => b.goals - a.goals);
     mergeApiData(sData, mData);
     if (currentView === "artilheiros") renderScorers();
     hideError();
     updateLastUpdated(new Date(), true);
 
-    // Polling mais rápido (30s) quando há jogo ao vivo ou prestes a começar/em andamento
-    const rawMatches = mData.matches || [];
-    const hasLive = rawMatches.some(m => {
-      if (m.status === "IN_PLAY" || m.status === "PAUSED") return true;
-      // Se ainda está TIMED mas horário já passou (API com delay) → pollar mais rápido
-      if (m.status === "TIMED") {
-        const diff = Date.now() - new Date(m.utcDate).getTime();
-        return diff > 0 && diff < 120 * 60 * 1000;
-      }
-      return false;
-    });
-    const interval = hasLive ? 30000 : 60000;
-    countdown = hasLive ? 30 : 60;
+    // Ajusta intervalo: 15s ao vivo, 30s normal
+    const hasLive = _hasAnyLive(mData.matches);
+    const interval = hasLive ? 15000 : 30000;
+    countdown = hasLive ? 15 : 30;
     clearInterval(pollingTimer);
     pollingTimer = setInterval(fetchLive, interval);
   } catch(e) {
@@ -1475,9 +1513,9 @@ function startLiveMode() {
 
   fetchLive();
 
-  pollingTimer = setInterval(fetchLive, 60000);
+  pollingTimer = setInterval(fetchLive, 30000);
   countdownTimer = setInterval(() => {
-    countdown = countdown <= 1 ? 60 : countdown - 1;
+    countdown = countdown <= 1 ? countdown : countdown - 1;
     const lbl = document.getElementById("live-label");
     if (lbl) lbl.textContent = `Ao vivo · próx. ${countdown}s`;
   }, 1000);
@@ -1492,7 +1530,7 @@ function stopLiveMode() {
   render();
 }
 
-function manualRefresh() { fetchLive(); countdown = 60; }
+function manualRefresh() { _fetchCycle = 0; fetchLive(true); countdown = 30; }
 
 function clearApiKey() {
   localStorage.removeItem("wc2026_key");
