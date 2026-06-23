@@ -782,13 +782,23 @@ function renderMatches(group) {
 }
 
 // ─── LIVE NOW BANNER ─────────────────────────────────────────────────────────
-function calcPeriod(dateStr, status) {
-  const elapsed = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+// htHome/htAway: placar do 1° tempo (null = 1° tempo ainda não terminou)
+function calcPeriod(dateStr, status, htHome, htAway) {
   if (status === "PAUSED") return { label: "INTERVALO", elapsed: 45 };
-  if (elapsed <= 0)  return { label: "INÍCIO", elapsed: 0 };
-  if (elapsed <= 45) return { label: "1° TEMPO", elapsed };
-  if (elapsed <= 105) return { label: "2° TEMPO", elapsed: Math.min(elapsed - 45, 90) };
-  return { label: "2° TEMPO", elapsed: 90 };
+
+  const totalElapsed = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+
+  // Se a API já registrou placar do HT → estamos no 2° tempo
+  if (htHome !== null && htAway !== null) {
+    // 2° tempo começa ~60 min após o início (45 min jogo + ~15 min intervalo)
+    const secElapsed = Math.max(1, Math.min(totalElapsed - 60, 45));
+    return { label: "2° TEMPO", elapsed: secElapsed };
+  }
+
+  // Ainda no 1° tempo (ou não há info de HT)
+  if (totalElapsed <= 0) return { label: "INÍCIO", elapsed: 0 };
+  // Limita a 45 na exibição (acréscimos do 1° tempo não ultrapassam muito)
+  return { label: "1° TEMPO", elapsed: Math.min(totalElapsed, 52) };
 }
 
 function renderLiveNow() {
@@ -803,8 +813,8 @@ function renderLiveNow() {
     const onclick = m.groupId ? `selectGroup('${m.groupId}')` : `setView('eliminatorias')`;
     const label = m.groupId ? `GRUPO ${m.groupId}` : (m.stageName || "MATA-MATA");
 
-    // Period / elapsed time
-    const { label: periodLabel, elapsed } = calcPeriod(m.date, m.status);
+    // Period / elapsed time (usa placar HT como sinal real do período)
+    const { label: periodLabel, elapsed } = calcPeriod(m.date, m.status, m.ht_home, m.ht_away);
     const elapsedHtml = (confirmed && m.status !== "PAUSED")
       ? `<span class="ln-elapsed">${elapsed}<small>'</small></span>`
       : `<span class="ln-elapsed" style="font-size:14px">${periodLabel}</span>`;
@@ -820,7 +830,9 @@ function renderLiveNow() {
     // HT score sub-label
     const htHtml = (m.ht_home !== null && m.ht_away !== null)
       ? `<span class="ln-score-ht">1° T: ${m.ht_home}–${m.ht_away}</span>`
-      : "";
+      : (m.status === "PAUSED")
+        ? `<span class="ln-score-ht">Intervalo</span>`
+        : "";
 
     // Meta chips: round, referee
     const rdLabel = m.rd ? `Rodada ${m.rd}` : (m.stageName || "");
@@ -921,7 +933,10 @@ function bkCard(m, wide) {
     </div>`;
   }
   const cls = `bk-card${live?" bk-live":done?" bk-done":""}${wide?" bk-final-card":""}`;
-  const liveLabel = confirmed ? (m.minute ? `${m.minute}'` : "AO VIVO") : "EM ANDAMENTO";
+  const { label: _pl, elapsed: _pe } = calcPeriod(m.date, m.status, m.ht_home, m.ht_away);
+  const liveLabel = m.status === "PAUSED" ? "INTERVALO"
+    : confirmed ? (m.minute ? `${m.minute}'` : `${_pl} ~${_pe}'`)
+    : "EM ANDAMENTO";
   return `<div class="${cls}">
     ${live?`<div class="bk-live-bar"><span class="dot live-red"></span>${liveLabel}</div>`:""}
     ${tr(m.home,m.hs,hw)}<div class="bk-div"></div>${tr(m.away,m.as_,aw)}
