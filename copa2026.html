@@ -567,6 +567,7 @@ const HARDCODED_KEY = "12bea6119d864fa2a562131cef67af85";
 let apiKey = HARDCODED_KEY || localStorage.getItem("wc2026_key") || "";
 let pollingTimer = null;
 let countdownTimer = null;
+let espnTimer = null;
 let countdown = 60;
 let isLive = false;
 
@@ -965,8 +966,12 @@ function renderLiveNow() {
     </div>`;
   }).join("");
 
-  section.innerHTML = `<div class="live-now-title"><span class="dot live-red"></span>JOGOS AO VIVO AGORA</div>
-    <div class="live-now-grid">${cards}</div>`;
+  const espnTime = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"America/Sao_Paulo"});
+  section.innerHTML = `<div class="live-now-title">
+    <span class="dot live-red"></span>JOGOS AO VIVO AGORA
+    <span style="margin-left:auto;font-size:10px;font-weight:500;color:var(--text-3);letter-spacing:0">atualizado ${espnTime}</span>
+  </div>
+  <div class="live-now-grid">${cards}</div>`;
   section.classList.add("visible");
 }
 
@@ -1376,7 +1381,7 @@ function setLoading(on) {
   const dot = document.getElementById("live-dot");
   const lbl = document.getElementById("live-label");
   if (dot) dot.className = on ? "dot pulse" : "dot on";
-  if (lbl) lbl.textContent = on ? "Atualizando…" : `Ao vivo · próx. ${countdown}s`;
+  if (lbl) lbl.textContent = on ? "Atualizando…" : `Ao vivo · tabelas em ${countdown}s`;
 }
 
 function showError(html) {
@@ -1425,6 +1430,21 @@ async function fetchESPNEvents() {
     }
     espnLiveCache = newCache;
   } catch { /* silent – mantém cache anterior */ }
+}
+
+// Loop ESPN independente: atualiza a cada 15s sem precisar de proxy
+function startESPNLoop() {
+  if (espnTimer) return; // já rodando
+  // Busca imediata
+  fetchESPNEvents().then(() => renderLiveNow());
+  espnTimer = setInterval(async () => {
+    await fetchESPNEvents();
+    renderLiveNow();
+  }, 15000);
+}
+function stopESPNLoop() {
+  clearInterval(espnTimer);
+  espnTimer = null;
 }
 
 function _hasAnyLive(matches) {
@@ -1498,8 +1518,8 @@ async function fetchLive(forceFullRefresh = false) {
       scData  = _cachedScorers;
     }
 
-    // ESPN buscada em paralelo (CORS aberto, sem proxy) – re-renderiza após obter gols/cartões
-    fetchESPNEvents().then(() => renderLiveNow());
+    // ESPN: garante que o loop dedicado está rodando (15s, direto sem proxy)
+    startESPNLoop();
 
     scorersData = ((scData||{}).scorers || []).sort((a, b) => b.goals - a.goals);
     mergeApiData(sData, mData);
@@ -1507,10 +1527,11 @@ async function fetchLive(forceFullRefresh = false) {
     hideError();
     updateLastUpdated(new Date(), true);
 
-    // Ajusta intervalo: 15s ao vivo, 30s normal
+    // football-data.org: 60s ao vivo (standings/scorers não mudam a cada segundo)
+    // A frequência do placar ao vivo vem do loop ESPN (15s, sem proxy)
     const hasLive = _hasAnyLive(mData.matches);
-    const interval = hasLive ? 15000 : 30000;
-    countdown = hasLive ? 15 : 30;
+    const interval = hasLive ? 60000 : 120000;
+    countdown = hasLive ? 60 : 120;
     clearInterval(pollingTimer);
     pollingTimer = setInterval(fetchLive, interval);
   } catch(e) {
@@ -1635,7 +1656,7 @@ function startLiveMode() {
   countdownTimer = setInterval(() => {
     countdown = countdown <= 1 ? countdown : countdown - 1;
     const lbl = document.getElementById("live-label");
-    if (lbl) lbl.textContent = `Ao vivo · próx. ${countdown}s`;
+    if (lbl) lbl.textContent = `Ao vivo · tabelas em ${countdown}s`;
   }, 1000);
 }
 
@@ -1643,6 +1664,7 @@ function stopLiveMode() {
   isLive = false;
   clearInterval(pollingTimer);
   clearInterval(countdownTimer);
+  stopESPNLoop();
   document.getElementById("live-on").style.display = "none";
   currentGroups = GROUPS;
   render();
