@@ -239,23 +239,74 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .ln-event-team{font-size:11px;color:var(--text-3);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:999px}
 
 /* KNOCKOUT */
-.knockout-view{display:none;flex-direction:column;gap:28px;padding-top:12px}
+.knockout-view{display:none;flex-direction:column;gap:0;padding-top:8px}
 .knockout-view.active{display:flex}
-.ko-round-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--gold);border-left:3px solid var(--gold);padding:6px 12px;margin-bottom:14px;background:rgba(240,165,0,.06);border-radius:0 var(--r-sm) var(--r-sm) 0}
-.ko-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
-.ko-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 15px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+
+/* Round section */
+.ko-phase{margin-bottom:32px}
+.ko-phase-header{display:flex;align-items:center;gap:14px;padding:12px 16px;margin-bottom:16px;
+  background:linear-gradient(90deg,rgba(240,165,0,.12) 0%,rgba(240,165,0,.04) 60%,transparent 100%);
+  border-left:4px solid var(--gold);border-radius:0 var(--r-md) var(--r-md) 0}
+.ko-phase-icon{font-size:22px;line-height:1;filter:drop-shadow(0 0 6px rgba(240,165,0,.4))}
+.ko-phase-title{font-size:15px;font-weight:800;color:var(--text-1);letter-spacing:-.3px}
+.ko-phase-count{font-size:11px;color:var(--text-3);font-weight:500;margin-left:auto;
+  background:var(--bg-surface);border:1px solid var(--border);border-radius:999px;padding:2px 10px}
+
+/* Phase accent colors */
+.ko-phase.r32  .ko-phase-header{border-color:#4a9eff;background:linear-gradient(90deg,rgba(74,158,255,.1) 0%,transparent 70%)}
+.ko-phase.r16  .ko-phase-header{border-color:#a855f7;background:linear-gradient(90deg,rgba(168,85,247,.1) 0%,transparent 70%)}
+.ko-phase.qf   .ko-phase-header{border-color:#f97316;background:linear-gradient(90deg,rgba(249,115,22,.1) 0%,transparent 70%)}
+.ko-phase.sf   .ko-phase-header{border-color:#eab308;background:linear-gradient(90deg,rgba(234,179,8,.12) 0%,transparent 70%)}
+.ko-phase.final .ko-phase-header{border-color:var(--gold);background:linear-gradient(90deg,rgba(240,165,0,.16) 0%,transparent 70%)}
+.ko-phase.r32  .ko-phase-title{color:#4a9eff}
+.ko-phase.r16  .ko-phase-title{color:#a855f7}
+.ko-phase.qf   .ko-phase-title{color:#f97316}
+.ko-phase.sf   .ko-phase-title{color:#eab308}
+.ko-phase.final .ko-phase-title{color:var(--gold)}
+
+/* Cards grid */
+.ko-grid{display:grid;gap:12px}
+.ko-grid.g3{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.ko-grid.g2{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.ko-grid.g1{grid-template-columns:minmax(280px,540px)}
+@media(max-width:600px){.ko-grid.g3,.ko-grid.g2,.ko-grid.g1{grid-template-columns:1fr}}
+
+/* Card */
+.ko-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:0;overflow:hidden;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .ko-card:hover{border-color:var(--border-mid);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
-.ko-card.ko-live{border-color:rgba(255,58,58,.4);background:linear-gradient(135deg,rgba(255,58,58,.06),var(--bg-card))}
-.ko-venue{margin-top:6px;font-size:10px;color:var(--text-3)}
-.ko-date{font-size:11px;color:var(--text-3);margin-bottom:9px}
-.ko-live-badge{font-size:11px;font-weight:800;color:var(--live);display:flex;align-items:center;gap:5px;margin-bottom:7px}
-.ko-row{display:flex;align-items:center;gap:8px}
-.ko-team{flex:1;font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.ko-team.right{flex-direction:row-reverse;text-align:right}
-.ko-team.winner{color:var(--text-1);font-weight:700}
-.ko-team.tbd{color:var(--text-3);font-style:italic}
-.ko-score{font-size:19px;font-weight:800;color:var(--text-1);min-width:62px;text-align:center;flex-shrink:0}
-.ko-score .sep{color:var(--text-3);font-weight:300}.ko-score .t{font-size:12px;color:var(--text-2);font-weight:600;background:var(--bg-hover);padding:3px 8px;border-radius:999px}
+.ko-card.ko-live{border-color:rgba(255,58,58,.4);box-shadow:0 0 16px rgba(255,58,58,.15)}
+
+/* Card top strip: date/time and venue */
+.ko-card-top{padding:8px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:32px}
+.ko-date{font-size:11px;color:var(--text-3);font-weight:500}
+.ko-venue{font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:3px;max-width:55%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ko-live-badge{font-size:11px;font-weight:800;color:var(--live);display:flex;align-items:center;gap:5px}
+
+/* Card body: teams + score */
+.ko-match-body{padding:14px 16px 12px;display:flex;align-items:center;gap:10px}
+.ko-team-block{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+.ko-team-block.right{}
+.ko-crest{width:44px;height:44px;object-fit:contain;flex-shrink:0}
+.ko-crest-flag{font-size:32px;line-height:1}
+.ko-team-name{font-size:12px;color:var(--text-2);font-weight:600;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+.ko-team-name.winner{color:var(--green);font-weight:700}
+.ko-team-name.tbd{color:var(--text-3);font-style:italic;font-weight:400}
+
+/* Score center */
+.ko-score-center{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;min-width:72px}
+.ko-score-big{font-size:26px;font-weight:900;color:var(--text-1);display:flex;align-items:center;gap:5px;letter-spacing:-1px}
+.ko-score-big .sep{color:var(--text-3);font-weight:300;font-size:20px}
+.ko-score-time{font-size:12px;color:var(--text-2);font-weight:700;background:var(--bg-hover);
+  padding:4px 10px;border-radius:999px;white-space:nowrap}
+.ko-score-win{color:var(--green)}
+
+/* Final card special style */
+.ko-card.final-card{border-color:rgba(240,165,0,.35);background:linear-gradient(135deg,rgba(240,165,0,.06),var(--bg-card));
+  box-shadow:0 4px 24px rgba(240,165,0,.15)}
 
 /* ─── ARTILHEIROS ──────────────────────────────────────────────── */
 .scorers-view{display:none;flex-direction:column;gap:28px;padding-top:12px}
@@ -1048,52 +1099,88 @@ function renderKnockout() {
     return;
   }
 
+  const PHASE_META = {
+    LAST_32:       { cls:"r32",   gridCls:"g3", icon:"⚔️" },
+    LAST_16:       { cls:"r16",   gridCls:"g3", icon:"🎯" },
+    QUARTER_FINALS:{ cls:"qf",    gridCls:"g2", icon:"🔥" },
+    SEMI_FINALS:   { cls:"sf",    gridCls:"g2", icon:"⭐" },
+    THIRD_PLACE:   { cls:"final", gridCls:"g1", icon:"🥉" },
+    FINAL:         { cls:"final", gridCls:"g1", icon:"🏆" },
+  };
+
+  function koMatchCard(m, isFinal) {
+    const live = m.status === "IN_PLAY" || m.status === "PAUSED";
+    const done = m.status === "FINISHED";
+    const hasScore = m.hs !== null && m.as_ !== null;
+    const hw = hasScore && m.hs > m.as_;
+    const aw = hasScore && m.as_ > m.hs;
+    const homeKnown = m.home.name && m.home.name !== "A definir";
+    const awayKnown = m.away.name && m.away.name !== "A definir";
+
+    // Top bar
+    const dateStr = live
+      ? `<div class="ko-live-badge"><span class="dot live-red"></span>AO VIVO</div>`
+      : `<div class="ko-date">${done ? fmtDate(m.date) : `${fmtDate(m.date)} · ${fmtTime(m.date)}`}</div>`;
+    const venueStr = m.venue
+      ? `<div class="ko-venue">📍 ${m.venue}${m.venueCity ? `, ${m.venueCity}` : ""}</div>`
+      : "";
+
+    // Team crest/flag
+    function teamImg(team, sz=44) {
+      if (team.crest)
+        return `<img src="${team.crest}" class="ko-crest" style="width:${sz}px;height:${sz}px" onerror="this.outerHTML='<span class=ko-crest-flag>${team.flag||"⚽"}</span>'">`;
+      return `<span class="ko-crest-flag">${team.flag || "⚽"}</span>`;
+    }
+
+    const crestSz = isFinal ? 56 : 44;
+    const homeImg  = homeKnown ? teamImg(m.home, crestSz) : `<span style="font-size:32px;opacity:.3">?</span>`;
+    const awayImg  = awayKnown ? teamImg(m.away, crestSz) : `<span style="font-size:32px;opacity:.3">?</span>`;
+
+    // Score
+    let scoreCenterHtml;
+    if (hasScore) {
+      scoreCenterHtml = `<div class="ko-score-big">
+        <span class="${hw?"ko-score-win":""}">${m.hs}</span>
+        <span class="sep">–</span>
+        <span class="${aw?"ko-score-win":""}">${m.as_}</span>
+      </div>`;
+    } else {
+      const timeLabel = done ? "FT" : fmtTime(m.date);
+      scoreCenterHtml = `<div class="ko-score-time">${timeLabel}</div>`;
+    }
+
+    return `<div class="ko-card${live?" ko-live":""}${isFinal?" final-card":""}">
+      <div class="ko-card-top">${dateStr}${venueStr}</div>
+      <div class="ko-match-body">
+        <div class="ko-team-block">
+          ${homeImg}
+          <div class="ko-team-name${!homeKnown?" tbd":""}${hw?" winner":""}">${homeKnown ? m.home.name : "A definir"}</div>
+        </div>
+        <div class="ko-score-center">${scoreCenterHtml}</div>
+        <div class="ko-team-block right">
+          ${awayImg}
+          <div class="ko-team-name${!awayKnown?" tbd":""}${aw?" winner":""}">${awayKnown ? m.away.name : "A definir"}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
   const listaHtml = KO_STAGES.map(({ key, label }) => {
     const ms = knockoutMatches.filter(m => m.stage === key);
     if (!ms.length) return "";
-
-    const cards = ms.map(m => {
-      const live    = m.status === "IN_PLAY" || m.status === "PAUSED";
-      const done    = m.status === "FINISHED";
-      const hasScore = m.hs !== null && m.as_ !== null;
-      const hw = hasScore && m.hs > m.as_;
-      const aw = hasScore && m.as_ > m.hs;
-      const homeKnown = !!m.home?.name;
-      const awayKnown = !!m.away?.name;
-
-      const topHtml = live
-        ? `<div class="ko-live-badge"><span class="dot live-red"></span>AO VIVO${m.minute ? ` · ${m.minute}'` : ""}</div>`
-        : `<div class="ko-date">${done ? fmtDate(m.date) : `${fmtDate(m.date)} · ${fmtTime(m.date)}`}</div>`;
-
-      const scoreHtml = hasScore
-        ? `<span${hw?" class='score-w'":""}>${m.hs}</span><span class="sep"> – </span><span${aw?" class='score-w'":""}>${m.as_}</span>`
-        : `<span class="t">${done ? "–" : fmtTime(m.date)}</span>`;
-
-      const homeCrest = m.home.crest
-        ? `<img src="${m.home.crest}" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:5px" onerror="this.style.display='none'">`
-        : (m.home.flag ? `<span style="margin-right:4px">${m.home.flag}</span>` : "");
-      const awayCrest = m.away.crest
-        ? `<img src="${m.away.crest}" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'">`
-        : (m.away.flag ? `<span style="margin-left:4px">${m.away.flag}</span>` : "");
-      const venueHtml = m.venue ? `<div class="ko-venue">📍 ${m.venue}${m.venueCity?`, ${m.venueCity}`:""}</div>` : "";
-      return `<div class="ko-card${live?" ko-live":""}">
-        ${topHtml}
-        <div class="ko-row">
-          <div class="ko-team${!homeKnown?" tbd":""}${hw?" winner":""}">
-            ${homeKnown ? `${homeCrest}${m.home.name}` : "A definir"}
-          </div>
-          <div class="ko-score">${scoreHtml}</div>
-          <div class="ko-team right${!awayKnown?" tbd":""}${aw?" winner":""}">
-            ${awayKnown ? `${m.away.name}${awayCrest}` : "A definir"}
-          </div>
+    const meta = PHASE_META[key] || { cls:"r32", gridCls:"g3", icon:"" };
+    const isFinal = key === "FINAL" || key === "THIRD_PLACE";
+    const iconHtml = `<span class="ko-phase-icon" style="font-size:20px;filter:drop-shadow(0 0 4px rgba(255,255,255,.2))">${meta.icon}</span>`;
+    const cards = ms.map(m => koMatchCard(m, isFinal)).join("");
+    return `<div class="ko-phase ${meta.cls}">
+      <div class="ko-phase-header">
+        ${iconHtml}
+        <div>
+          <div class="ko-phase-title">${label}</div>
         </div>
-        ${venueHtml}
-      </div>`;
-    }).join("");
-
-    return `<div>
-      <div class="ko-round-title">${label} <span style="opacity:.5;font-weight:400">(${ms.length} ${ms.length===1?"jogo":"jogos"})</span></div>
-      <div class="ko-grid">${cards}</div>
+        <div class="ko-phase-count">${ms.length} ${ms.length===1?"jogo":"jogos"}</div>
+      </div>
+      <div class="ko-grid ${meta.gridCls}">${cards}</div>
     </div>`;
   }).join("");
 
