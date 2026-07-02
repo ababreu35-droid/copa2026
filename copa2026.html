@@ -1624,23 +1624,35 @@ function getFlag(name, tla) { return FLAG_MAP[(tla||"").toUpperCase()] || ""; }
 // ESPN: RD32=classificado p/ R32, RD16 Wx=ganhou R32, QFWx=ganhou R16, SFWx/SF Lx=ganhou/perdeu QF
 function getKOStageFromAbbr(ha, aa) {
   const check = s => s && (ha.startsWith(s) || aa.startsWith(s));
-  if (check("SFW") || check("SF L") || check("SF W")) return null; // usa data
-  if (check("QFW"))  return {stage:"SEMI_FINALS",    label:"Semifinal"};
+  if (check("SFW") || check("SF L") || check("SF W")) return null;
+  if (check("QFW"))  return {stage:"SEMI_FINALS",    label:"Semifinais"};
   if (check("RD16")) return {stage:"QUARTER_FINALS", label:"Quartas de Final"};
   if (check("RD32")) return {stage:"LAST_16",        label:"Oitavas de Final"};
-  // Nenhum placeholder encontrado → ambos os times são reais → usar data
+  return null; // times reais → usar ID ou data
+}
+
+// Copa 2026 — IDs de evento ESPN por fase (confirmados via API)
+function getKOStageByEventId(eventId) {
+  const id = parseInt(eventId) || 0;
+  if (id >= 760486 && id <= 760501) return {stage:"LAST_32",        label:"Rodada de 32"};
+  if (id >= 760502 && id <= 760509) return {stage:"LAST_16",        label:"Oitavas de Final"};
+  if (id >= 760510 && id <= 760513) return {stage:"QUARTER_FINALS", label:"Quartas de Final"};
+  if (id >= 760514 && id <= 760515) return {stage:"SEMI_FINALS",    label:"Semifinais"};
+  if (id === 760516)                return {stage:"THIRD_PLACE",    label:"3.° Lugar"};
+  if (id >= 760517)                 return {stage:"FINAL",          label:"Final"};
   return null;
 }
+
 function getKOStageByDate(dateStr) {
-  // Copa 2026: R32 28/jun–3/jul · R16 5–8/jul · QF 10–11/jul · SF 14–15/jul · 3P 18/jul · Final 19/jul
+  // Fallback final por data
   const d = new Date(dateStr), mo = d.getUTCMonth()+1, dy = d.getUTCDate();
-  if (mo === 6 && dy >= 27)          return {stage:"LAST_32",        label:"Rodada de 32"};
-  if (mo === 7 && dy <= 4)           return {stage:"LAST_32",        label:"Rodada de 32"};
-  if (mo === 7 && dy >= 5 && dy <= 8) return {stage:"LAST_16",       label:"Oitavas de Final"};
-  if (mo === 7 && dy >= 9 && dy <=12) return {stage:"QUARTER_FINALS",label:"Quartas de Final"};
-  if (mo === 7 && dy >= 13&& dy <=16) return {stage:"SEMI_FINALS",   label:"Semifinais"};
-  if (mo === 7 && dy === 18)          return {stage:"THIRD_PLACE",   label:"3.° Lugar"};
-  return                                     {stage:"FINAL",         label:"Final"};
+  if (mo === 6 && dy >= 27)           return {stage:"LAST_32",        label:"Rodada de 32"};
+  if (mo === 7 && dy <= 3)            return {stage:"LAST_32",        label:"Rodada de 32"};
+  if (mo === 7 && dy >= 4 && dy <= 8) return {stage:"LAST_16",        label:"Oitavas de Final"};
+  if (mo === 7 && dy >= 9 && dy <=12) return {stage:"QUARTER_FINALS", label:"Quartas de Final"};
+  if (mo === 7 && dy >= 13&& dy <=16) return {stage:"SEMI_FINALS",    label:"Semifinais"};
+  if (mo === 7 && dy === 18)          return {stage:"THIRD_PLACE",    label:"3.° Lugar"};
+  return                                     {stage:"FINAL",          label:"Final"};
 }
 
 // Converte dados ESPN → formato interno
@@ -1745,7 +1757,9 @@ function parseESPNData(stData, scData) {
       if (!matchesByGroup[gl]) matchesByGroup[gl] = [];
       matchesByGroup[gl].push(parsed);
     } else {
+      // 1º abbrev (placeholders como "RD32 W1"), 2º event ID (preciso p/ Copa 2026), 3º data (fallback)
       const ko = getKOStageFromAbbr(hT.abbreviation, aT.abbreviation)
+              || getKOStageByEventId(event.id)
               || getKOStageByDate(parsed.date);
       koList.push({...parsed, stage: ko.stage, stageName: ko.label});
     }
