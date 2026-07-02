@@ -367,79 +367,97 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .bk-tbtn:hover{color:var(--text-1);border-color:var(--border-mid)}
 .bk-tbtn.active{background:linear-gradient(135deg,var(--gold),#c47f00);color:#000;border-color:transparent;font-weight:700;box-shadow:0 2px 12px rgba(240,165,0,.25)}
 
-/* ─── VERTICAL BRACKET FLOW ─────────────────────────────────────── */
-.bk-flow{display:flex;flex-direction:column;gap:0}
+/* ─── BRACKET: HORIZONTAL CHAVEAMENTO ───────────────────────────── */
+/* Scroll wrapper */
+.bk-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+  padding-bottom:20px;cursor:grab;
+  scrollbar-width:thin;scrollbar-color:var(--border-mid) transparent}
+.bk-scroll::-webkit-scrollbar{height:4px}
+.bk-scroll::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
 
-/* Phase block */
-.bk-phase-blk{padding:20px 0 8px}
-.bk-phase-blk+.bk-phase-blk{border-top:1px solid var(--border)}
+/* Root bracket row */
+.bk-root{display:inline-flex;align-items:stretch;min-height:680px;padding:4px 2px 8px}
+.bk-half{display:flex;align-items:stretch}
 
-/* Phase header */
-.bk-phase-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.bk-phase-icon{font-size:22px;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(255,255,255,.15))}
-.bk-phase-label{flex:1}
-.bk-phase-name{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
-.bk-phase-count{font-size:11px;color:var(--text-3);margin-top:1px}
-.bk-phase-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;flex-shrink:0}
+/* Round wrapper: label + column stacked vertically */
+.bk-rnd{display:flex;flex-direction:column}
+.bk-rnd-hdr{height:26px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px;border-radius:999px;padding:0 10px;flex-shrink:0;
+  font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.bk-rnd-hdr.r32{color:#4a9eff;background:rgba(74,158,255,.09);border:1px solid rgba(74,158,255,.25)}
+.bk-rnd-hdr.r16{color:#a855f7;background:rgba(168,85,247,.09);border:1px solid rgba(168,85,247,.25)}
+.bk-rnd-hdr.qf {color:#f97316;background:rgba(249,115,22,.09);border:1px solid rgba(249,115,22,.25)}
+.bk-rnd-hdr.sf {color:#eab308;background:rgba(234,179,8,.1) ;border:1px solid rgba(234,179,8,.28)}
+.bk-rnd-hdr.fin{color:var(--gold);background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.3)}
 
-/* Phase accent colors */
-.bk-phase-blk.r32 .bk-phase-name{color:#4a9eff}
-.bk-phase-blk.r32 .bk-phase-badge{color:#4a9eff;background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.25)}
-.bk-phase-blk.r16 .bk-phase-name{color:#a855f7}
-.bk-phase-blk.r16 .bk-phase-badge{color:#a855f7;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)}
-.bk-phase-blk.qf  .bk-phase-name{color:#f97316}
-.bk-phase-blk.qf  .bk-phase-badge{color:#f97316;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25)}
-.bk-phase-blk.sf  .bk-phase-name{color:#eab308}
-.bk-phase-blk.sf  .bk-phase-badge{color:#eab308;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3)}
-.bk-phase-blk.fin .bk-phase-name{color:var(--gold)}
-.bk-phase-blk.fin .bk-phase-badge{color:var(--gold);background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.3)}
+/* Column of matches */
+.bk-col{flex:1;display:flex;flex-direction:column;width:178px}
+.bk-gap{width:24px;flex-shrink:0}
 
-/* Progress arrow between phases */
-.bk-progress-arrow{display:flex;flex-direction:column;align-items:center;padding:4px 0 0;gap:0}
-.bk-progress-arrow span{display:block;width:2px;height:10px;background:var(--border-mid)}
-.bk-progress-arrow::after{content:'▼';font-size:10px;color:var(--text-3);line-height:1;display:block}
+/* A pair groups 2 matches that feed into 1 match in the next round */
+.bk-pair{flex:1;display:flex;flex-direction:column;position:relative}
+/* Left half — bracket line on right, connector extends right */
+.bk-pair.L  {border-right:2px solid rgba(74,158,255,.35); padding-right:9px}
+.bk-pair.L::after{content:'';position:absolute;right:-24px;top:calc(50% - 1px);width:24px;height:2px;background:rgba(74,158,255,.35)}
+.bk-pair.R  {border-left :2px solid rgba(74,158,255,.35); padding-left :9px}
+.bk-pair.R::after{content:'';position:absolute;left:-24px;top:calc(50% - 1px);width:24px;height:2px;background:rgba(74,158,255,.35)}
+/* QF pairs (orange) */
+.bk-pair.LQ {border-right:2px solid rgba(249,115,22,.4);  padding-right:9px}
+.bk-pair.LQ::after{content:'';position:absolute;right:-24px;top:calc(50% - 1px);width:24px;height:2px;background:rgba(249,115,22,.4)}
+.bk-pair.RQ {border-left :2px solid rgba(249,115,22,.4);  padding-left :9px}
+.bk-pair.RQ::after{content:'';position:absolute;left:-24px;top:calc(50% - 1px);width:24px;height:2px;background:rgba(249,115,22,.4)}
 
-/* Match cards grid */
-.bk-grid{display:grid;gap:10px}
-.bk-grid.cols2{grid-template-columns:1fr 1fr}
-.bk-grid.cols1{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+/* Slot = one match position */
+.bk-slot{flex:1;display:flex;align-items:center;padding:3px 0;min-height:0}
 
-/* Match card */
-.bk-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
-.bk-card:hover{border-color:var(--border-mid);box-shadow:0 4px 16px rgba(0,0,0,.3)}
-.bk-card.bk-live{border-color:rgba(255,68,68,.5);box-shadow:0 0 14px rgba(255,68,68,.12)}
+/* Semi-final: single match that connects to Final */
+.bk-sf{flex:1;display:flex;align-items:center;padding:3px 0;position:relative}
+.bk-sf.L{padding-right:9px}
+.bk-sf.L::after{content:'';position:absolute;right:-24px;top:calc(50% - 1px);width:24px;height:2px;background:rgba(234,179,8,.5)}
+.bk-sf.R{padding-left:9px}
+.bk-sf.R::after{content:'';position:absolute;left:-24px;top:calc(50% - 1px);width:24px;height:2px;background:rgba(234,179,8,.5)}
+
+/* Final center column */
+.bk-fin-col{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:210px;flex-shrink:0;gap:4px;padding:0 10px}
+.bk-fin-trophy{font-size:52px;line-height:1;filter:drop-shadow(0 0 14px rgba(240,165,0,.4));margin:2px 0}
+.bk-fin-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gold)}
+.bk-tp-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:700;
+  margin-top:12px;padding:3px 10px;background:var(--bg-surface);border-radius:999px;border:1px solid var(--border)}
+
+/* ─── MATCH CARD (used inside bracket) ──────────────────────────── */
+.bk-card{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;flex-shrink:0;transition:border-color .2s,box-shadow .2s}
+.bk-card:hover{border-color:var(--border-mid);box-shadow:0 3px 12px rgba(0,0,0,.25)}
+.bk-card.bk-live{border-color:rgba(255,68,68,.5);box-shadow:0 0 12px rgba(255,68,68,.12)}
 .bk-card.bk-done{border-color:var(--border-mid)}
-.bk-card.bk-tbd{opacity:.5;border-style:dashed}
-
-/* Card top bar (date / live badge) */
-.bk-card-top{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;
-  background:var(--bg-surface);border-bottom:1px solid var(--border);font-size:10px;color:var(--text-3);gap:6px;min-height:26px}
-.bk-card-live{color:var(--live);font-weight:800;display:flex;align-items:center;gap:4px;font-size:10px;letter-spacing:.04em}
-.bk-card-date{color:var(--text-3);font-size:10px}
-.bk-card-venue{color:var(--text-3);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
-
-/* Team rows */
-.bk-trow{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:8px;
-  font-size:13px;color:var(--text-2);transition:background .15s;min-height:38px}
+.bk-card.bk-tbd{opacity:.45;border-style:dashed}
+/* card top info bar */
+.bk-card-top{display:flex;align-items:center;justify-content:space-between;
+  padding:3px 8px;background:var(--bg-surface);border-bottom:1px solid var(--border);
+  font-size:9px;color:var(--text-3);gap:4px;min-height:20px}
+.bk-card-live{color:var(--live);font-weight:800;display:flex;align-items:center;gap:3px;font-size:9px}
+.bk-card-date{font-size:9px;color:var(--text-3)}
+.bk-card-venue{font-size:9px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
+/* team rows */
+.bk-trow{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 8px;min-height:30px;gap:5px;color:var(--text-2);transition:background .15s}
 .bk-trow.winner{color:var(--text-1);font-weight:700;background:rgba(29,215,91,.07)}
 .bk-trow.tbd{color:var(--text-3);font-style:italic}
-.bk-ti{display:flex;align-items:center;gap:7px;overflow:hidden;flex:1;min-width:0}
-.bk-tcrest{width:22px;height:22px;object-fit:contain;flex-shrink:0}
-.bk-tfl{font-size:16px;flex-shrink:0;line-height:1}
-.bk-tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500}
-.bk-sc{font-size:15px;font-weight:800;flex-shrink:0;min-width:18px;text-align:right;color:var(--text-3)}
+.bk-ti{display:flex;align-items:center;gap:5px;overflow:hidden;flex:1;min-width:0}
+.bk-tcrest{width:18px;height:18px;object-fit:contain;flex-shrink:0}
+.bk-tfl{font-size:14px;flex-shrink:0;line-height:1}
+.bk-tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:500}
+.bk-sc{font-size:13px;font-weight:800;flex-shrink:0;min-width:14px;text-align:right;color:var(--text-3)}
 .bk-sc.gol{color:var(--green)}
 .bk-div{height:1px;background:var(--border)}
 
-/* Final special card */
-.bk-final-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0}
-.bk-trophy-icon{font-size:56px;line-height:1;filter:drop-shadow(0 0 16px rgba(240,165,0,.45));margin:4px 0}
-.bk-final-card-wrap{width:100%;max-width:380px}
-
-@media(max-width:520px){
-  .bk-grid.cols2{grid-template-columns:1fr}
-  .bk-tn{font-size:11px}
-}
+/* Final card (wider, bigger text) */
+.bk-fin-card{width:190px}
+.bk-fin-card .bk-trow{padding:8px 10px;min-height:38px}
+.bk-fin-card .bk-tn{font-size:12px}
+.bk-fin-card .bk-sc{font-size:15px}
+.bk-tp-card{width:190px}
 /* RESPONSIVE */
 @media(max-width:768px){
   .group-view{grid-template-columns:1fr}
@@ -1073,7 +1091,7 @@ function bkCard(m) {
   </div>`;
 }
 
-// ─── BRACKET VERTICAL FLOW ────────────────────────────────────────────────────
+// ─── BRACKET HORIZONTAL COM LINHAS ───────────────────────────────────────────
 function renderBracket() {
   const el = document.getElementById("ko-bracket");
   const byStage = s => knockoutMatches
@@ -1084,8 +1102,8 @@ function renderBracket() {
   const r16 = byStage("LAST_16");
   const qf  = byStage("QUARTER_FINALS");
   const sf  = byStage("SEMI_FINALS");
-  const fin = byStage("FINAL")[0]        || null;
-  const tp  = byStage("THIRD_PLACE")[0]  || null;
+  const fin = byStage("FINAL")[0]       || null;
+  const tp  = byStage("THIRD_PLACE")[0] || null;
 
   if (!r32.length && !r16.length) {
     el.innerHTML = `<p style="color:var(--text-3);padding:32px 0;text-align:center">
@@ -1093,61 +1111,79 @@ function renderBracket() {
     return;
   }
 
-  const PHASES = [
-    { key:"r32", icon:"⚔️",  label:"Rodada de 32",        matches: r32, cols: "cols2" },
-    { key:"r16", icon:"🎯",  label:"Oitavas de Final",     matches: r16, cols: "cols2" },
-    { key:"qf",  icon:"🔥",  label:"Quartas de Final",     matches: qf,  cols: "cols2" },
-    { key:"sf",  icon:"⭐",  label:"Semifinais",           matches: sf,  cols: "cols2" },
-  ];
+  // Pad arrays to expected sizes so the bracket is symmetric
+  function pad(arr, n) { while (arr.length < n) arr.push(null); return arr.slice(0,n); }
+  const r32L = pad(r32.slice(0,8),  8);
+  const r32R = pad(r32.slice(8,16), 8);
+  const r16L = pad(r16.slice(0,4),  4);
+  const r16R = pad(r16.slice(4,8),  4);
+  const qfL  = pad(qf.slice(0,2),   2);
+  const qfR  = pad(qf.slice(2,4),   2);
+  const sfL  = sf[0] || null;
+  const sfR  = sf[1] || null;
+  const gap  = `<div class="bk-gap"></div>`;
 
-  const arrow = `<div class="bk-progress-arrow"><span></span></div>`;
-
-  let html = `<div class="bk-flow">`;
-
-  for (let i = 0; i < PHASES.length; i++) {
-    const { key, icon, label, matches, cols } = PHASES[i];
-    if (!matches.length) continue;
-    const total = matches.length;
-    const cards = matches.map(m => bkCard(m)).join("");
-    html += `<div class="bk-phase-blk ${key}">
-      <div class="bk-phase-hdr">
-        <span class="bk-phase-icon">${icon}</span>
-        <div class="bk-phase-label">
-          <div class="bk-phase-name">${label}</div>
-          <div class="bk-phase-count">${total} ${total === 1 ? "jogo" : "jogos"}</div>
-        </div>
-        <span class="bk-phase-badge">${key.toUpperCase()}</span>
-      </div>
-      <div class="bk-grid ${cols}">${cards}</div>
-    </div>`;
-    // Arrow if there's a next phase
-    const remaining = PHASES.slice(i+1).find(p => p.matches.length);
-    if (remaining || fin) html += arrow;
-  }
-
-  // 3rd place + Final
-  if (tp || fin) {
-    html += `<div class="bk-phase-blk fin">
-      <div class="bk-phase-hdr">
-        <span class="bk-phase-icon">🏆</span>
-        <div class="bk-phase-label">
-          <div class="bk-phase-name">Finais</div>
-          <div class="bk-phase-count">${tp && fin ? "2 jogos" : "1 jogo"}</div>
-        </div>
-        <span class="bk-phase-badge">FIN</span>
-      </div>
-      ${tp ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:8px">🥉 Disputa de 3.° lugar</div>
-      <div class="bk-grid cols1" style="margin-bottom:16px">${bkCard(tp)}</div>` : ""}
-      <div class="bk-final-wrap">
-        <div class="bk-trophy-icon">🏆</div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:8px">Grande Final</div>
-        <div class="bk-grid cols1 bk-final-card-wrap">${bkCard(fin)}</div>
-      </div>
+  // Build a round column: array of matches, pair direction, round css class
+  function roundCol(matches, pairDir, rndCls, lbl) {
+    const pairs = [];
+    for (let i = 0; i < matches.length; i += 2) {
+      pairs.push([matches[i], matches[i+1]]);
+    }
+    const pairsHtml = pairs.map(([a,b]) =>
+      `<div class="bk-pair ${pairDir}">
+        <div class="bk-slot">${bkCard(a)}</div>
+        <div class="bk-slot">${bkCard(b)}</div>
+      </div>`
+    ).join("");
+    return `<div class="bk-rnd">
+      <div class="bk-rnd-hdr ${rndCls}">${lbl}</div>
+      <div class="bk-col">${pairsHtml}</div>
     </div>`;
   }
 
-  html += `</div>`;
-  el.innerHTML = html;
+  function sfCol(m, sfDir, rndCls, lbl) {
+    return `<div class="bk-rnd">
+      <div class="bk-rnd-hdr ${rndCls}">${lbl}</div>
+      <div class="bk-col"><div class="bk-sf ${sfDir}">${bkCard(m)}</div></div>
+    </div>`;
+  }
+
+  const leftHalf = [
+    roundCol(r32L, "L",  "r32", "Rodada 32"), gap,
+    roundCol(r16L, "L",  "r16", "Oitavas"),   gap,
+    roundCol(qfL,  "LQ", "qf",  "Quartas"),   gap,
+    sfCol(sfL,     "L",  "sf",  "Semi"),
+  ].join("") + gap;
+
+  const rightHalf = gap + [
+    sfCol(sfR,     "R",  "sf",  "Semi"),
+    gap, roundCol(qfR,  "RQ", "qf",  "Quartas"),
+    gap, roundCol(r16R, "R",  "r16", "Oitavas"),
+    gap, roundCol(r32R, "R",  "r32", "Rodada 32"),
+  ].join("");
+
+  const center = `<div class="bk-fin-col">
+    <div class="bk-rnd-hdr fin" style="margin-bottom:6px">⚽ Final</div>
+    <div class="bk-fin-trophy">🏆</div>
+    <div class="bk-fin-card">${bkCard(fin)}</div>
+    ${tp ? `<div class="bk-tp-lbl">🥉 3.° Lugar</div><div class="bk-tp-card">${bkCard(tp)}</div>` : ""}
+  </div>`;
+
+  el.innerHTML = `<div class="bk-scroll" id="bk-scroll">
+    <div class="bk-root">
+      <div class="bk-half">${leftHalf}</div>
+      ${center}
+      <div class="bk-half">${rightHalf}</div>
+    </div>
+  </div>`;
+
+  // Drag to scroll (desktop)
+  const s = document.getElementById("bk-scroll");
+  let down = false, sx = 0, sl = 0;
+  s.addEventListener("mousedown", e => { down=true; sx=e.pageX-s.offsetLeft; sl=s.scrollLeft; s.style.cursor="grabbing"; });
+  s.addEventListener("mouseleave", () => { down=false; s.style.cursor="grab"; });
+  s.addEventListener("mouseup",   () => { down=false; s.style.cursor="grab"; });
+  s.addEventListener("mousemove", e => { if(!down) return; e.preventDefault(); s.scrollLeft=sl-(e.pageX-s.offsetLeft-sx); });
 }
 
 // ─── KNOCKOUT RENDER ─────────────────────────────────────────────────────────
